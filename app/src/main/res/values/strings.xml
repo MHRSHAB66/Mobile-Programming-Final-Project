@@ -123,6 +123,8 @@
     <string name="cd_pause">Pause</string>
     <string name="cd_next">Next track</string>
     <string name="cd_previous">Previous track</string>
+    <string name="cd_playing_offline">Playing from device</string>
+    <string name="now_playing_offline">Offline</string>
     <string name="now_playing">Now Playing</string>
     <string name="now_playing_from">Playing from</string>
     <string name="player_sleep_timer">Sleep timer</string>
@@ -130,6 +132,9 @@
     <string name="player_sleep_15">15 minutes</string>
     <string name="player_sleep_30">30 minutes</string>
     <string name="player_sleep_60">60 minutes</string>
+    <string name="player_sleep_custom">Custom…</string>
+    <string name="player_sleep_custom_title">Custom sleep timer</string>
+    <string name="player_sleep_custom_hint">Minutes</string>
     <string name="player_speed">Playback speed</string>
     <string name="player_speed_value">%1$sx</string>
     <string name="player_queue">Up next</string>

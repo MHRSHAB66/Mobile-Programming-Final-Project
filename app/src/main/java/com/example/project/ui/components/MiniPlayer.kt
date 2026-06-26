@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -35,6 +36,7 @@ import com.example.project.ui.theme.LocalDimens
 fun MiniPlayer(
     state: PlaybackState,
     onPlayPause: () -> Unit,
+    onPrevious: () -> Unit,
     onNext: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -84,6 +86,13 @@ fun MiniPlayer(
                         color = MaterialTheme.colorScheme.onSecondaryContainer,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                IconButton(onClick = onPrevious, enabled = state.hasPrevious) {
+                    Icon(
+                        imageVector = Icons.Filled.SkipPrevious,
+                        contentDescription = stringResource(R.string.cd_previous),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                 }
                 IconButton(onClick = onPlayPause) {

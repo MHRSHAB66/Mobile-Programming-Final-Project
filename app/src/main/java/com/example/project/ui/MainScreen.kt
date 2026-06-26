@@ -77,6 +77,7 @@ fun MainScreen() {
                         MiniPlayer(
                             state = playback,
                             onPlayPause = playerViewModel::togglePlayPause,
+                            onPrevious = playerViewModel::previous,
                             onNext = playerViewModel::next,
                             onClick = { navController.navigate(Routes.NOW_PLAYING) },
                         )

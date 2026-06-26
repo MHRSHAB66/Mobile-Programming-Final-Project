@@ -6,6 +6,7 @@ import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
@@ -36,10 +37,22 @@ class MusicService : MediaSessionService() {
             .setUpstreamDataSourceFactory(DefaultDataSource.Factory(this))
             .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
 
+        // Reduce bufferForPlaybackMs so playback starts as soon as ~500 ms is buffered
+        // (default is 2 500 ms), cutting the first-tap delay on stable connections.
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                /* minBufferMs             = */ 15_000,
+                /* maxBufferMs             = */ 50_000,
+                /* bufferForPlaybackMs     = */ 500,
+                /* bufferForPlaybackAfterRebufferMs = */ 2_000,
+            )
+            .build()
+
         val player = ExoPlayer.Builder(this)
             .setAudioAttributes(audioAttributes, /* handleAudioFocus = */ true)
             .setHandleAudioBecomingNoisy(true)
             .setMediaSourceFactory(DefaultMediaSourceFactory(cacheDataSourceFactory))
+            .setLoadControl(loadControl)
             .build()
 
         mediaSession = MediaSession.Builder(this, player).build()

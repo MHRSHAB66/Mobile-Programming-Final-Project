@@ -22,22 +22,26 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,6 +67,7 @@ import com.example.project.domain.model.Conversation
 import com.example.project.ui.components.CoverImage
 import com.example.project.ui.components.LikeButton
 import com.example.project.ui.components.bounceClick
+import com.example.project.ui.components.rememberAnimatedBrandGradient
 import com.example.project.ui.components.rememberPulse
 import com.example.project.ui.player.PlayerViewModel
 import com.example.project.ui.theme.LocalDimens
@@ -79,19 +84,22 @@ fun NowPlayingScreen(
     val song = state.currentSong
 
     val fallback = MaterialTheme.colorScheme.primary
-    val dominant by rememberDominantColor(song?.coverImageUrl, fallback)
+    val albumColors by rememberAlbumColors(song?.coverImageUrl, fallback)
+    val dominant = albumColors.firstOrNull() ?: fallback
     val background = MaterialTheme.colorScheme.background
+
+    val animatedBackground = rememberAnimatedBrandGradient(
+        colors = albumColors.map { it.copy(alpha = 0.60f) } + listOf(background, background),
+        durationMillis = 5000,
+        span = 1400f,
+    )
 
     var showShareDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(dominant.copy(alpha = 0.55f), background, background)
-                )
-            )
+            .background(animatedBackground)
     ) {
         Column(
             modifier = Modifier
@@ -191,15 +199,25 @@ fun NowPlayingScreen(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
-                IconButton(
-                    onClick = { song?.let(playerViewModel::onDownload) },
-                    enabled = song != null,
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Download,
-                        contentDescription = stringResource(R.string.download),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                if (song?.isDownloaded == true) {
+                    IconButton(onClick = {}, enabled = false) {
+                        Icon(
+                            imageVector = Icons.Filled.DownloadDone,
+                            contentDescription = stringResource(R.string.cd_playing_offline),
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                } else {
+                    IconButton(
+                        onClick = { song?.let(playerViewModel::onDownload) },
+                        enabled = song != null,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Download,
+                            contentDescription = stringResource(R.string.download),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
                 LikeButton(
                     isLiked = song?.isLiked == true,
@@ -368,22 +386,26 @@ private fun SeekBar(positionMs: Long, durationMs: Long, onSeek: (Long) -> Unit) 
 @Composable
 private fun SleepTimerControl(activeMinutes: Int, onSelect: (Int) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
-    val options = listOf(
+    var showCustomDialog by remember { mutableStateOf(false) }
+    var customInput by remember { mutableStateOf("") }
+
+    val presets = listOf(
         0 to R.string.player_sleep_off,
         15 to R.string.player_sleep_15,
         30 to R.string.player_sleep_30,
         60 to R.string.player_sleep_60,
     )
+
     Box {
         TextButton(onClick = { expanded = true }) {
             Icon(Icons.Filled.Bedtime, contentDescription = stringResource(R.string.player_sleep_timer))
             Text(
-                text = if (activeMinutes > 0) "$activeMinutes" else stringResource(R.string.player_sleep_timer),
+                text = if (activeMinutes > 0) "$activeMinutes min" else stringResource(R.string.player_sleep_timer),
                 modifier = Modifier.padding(start = 6.dp),
             )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            options.forEach { (minutes, labelRes) ->
+            presets.forEach { (minutes, labelRes) ->
                 DropdownMenuItem(
                     text = { Text(stringResource(labelRes)) },
                     onClick = {
@@ -392,7 +414,45 @@ private fun SleepTimerControl(activeMinutes: Int, onSelect: (Int) -> Unit) {
                     },
                 )
             }
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.player_sleep_custom)) },
+                onClick = {
+                    expanded = false
+                    customInput = ""
+                    showCustomDialog = true
+                },
+            )
         }
+    }
+
+    if (showCustomDialog) {
+        AlertDialog(
+            onDismissRequest = { showCustomDialog = false },
+            title = { Text(stringResource(R.string.player_sleep_custom_title)) },
+            text = {
+                OutlinedTextField(
+                    value = customInput,
+                    onValueChange = { customInput = it.filter { c -> c.isDigit() } },
+                    label = { Text(stringResource(R.string.player_sleep_custom_hint)) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val minutes = customInput.toIntOrNull() ?: 0
+                        if (minutes > 0) onSelect(minutes)
+                        showCustomDialog = false
+                    }
+                ) { Text(stringResource(R.string.ok)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCustomDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
     }
 }
 
