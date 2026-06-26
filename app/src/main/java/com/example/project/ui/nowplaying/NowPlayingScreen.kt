@@ -25,6 +25,9 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material.icons.filled.RepeatOne
+import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Speed
@@ -64,6 +67,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.project.R
 import com.example.project.core.util.asTrackTime
 import com.example.project.domain.model.Conversation
+import com.example.project.domain.model.RepeatMode
 import com.example.project.ui.components.CoverImage
 import com.example.project.ui.components.LikeButton
 import com.example.project.ui.components.bounceClick
@@ -235,17 +239,28 @@ fun NowPlayingScreen(
             // Transport controls
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                // Shuffle toggle
+                IconButton(onClick = playerViewModel::toggleShuffle) {
+                    Icon(
+                        Icons.Filled.Shuffle,
+                        contentDescription = stringResource(R.string.player_shuffle),
+                        tint = if (state.isShuffled)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
                 IconButton(onClick = playerViewModel::previous, enabled = state.hasPrevious) {
                     Icon(
                         Icons.Filled.SkipPrevious,
                         contentDescription = stringResource(R.string.cd_previous),
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(36.dp),
                     )
                 }
-                Spacer(Modifier.size(dimens.spaceL))
                 Surface(
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.primary,
@@ -262,12 +277,32 @@ fun NowPlayingScreen(
                         )
                     }
                 }
-                Spacer(Modifier.size(dimens.spaceL))
                 IconButton(onClick = playerViewModel::next, enabled = state.hasNext) {
                     Icon(
                         Icons.Filled.SkipNext,
                         contentDescription = stringResource(R.string.cd_next),
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(36.dp),
+                    )
+                }
+                // Repeat cycle: OFF → ALL → ONE → OFF
+                IconButton(onClick = playerViewModel::cycleRepeatMode) {
+                    Icon(
+                        imageVector = if (state.repeatMode == RepeatMode.ONE)
+                            Icons.Filled.RepeatOne
+                        else
+                            Icons.Filled.Repeat,
+                        contentDescription = stringResource(
+                            when (state.repeatMode) {
+                                RepeatMode.OFF -> R.string.player_repeat_off
+                                RepeatMode.ALL -> R.string.player_repeat_all
+                                RepeatMode.ONE -> R.string.player_repeat_one
+                            }
+                        ),
+                        tint = if (state.repeatMode != RepeatMode.OFF)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp),
                     )
                 }
             }

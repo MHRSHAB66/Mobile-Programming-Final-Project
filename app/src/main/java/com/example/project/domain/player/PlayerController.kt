@@ -1,6 +1,7 @@
 package com.example.project.domain.player
 
 import com.example.project.domain.model.PlaybackState
+import com.example.project.domain.model.RepeatMode
 import com.example.project.domain.model.Song
 import kotlinx.coroutines.flow.StateFlow
 
@@ -19,6 +20,8 @@ interface PlayerController {
     fun previous()
     fun seekTo(positionMs: Long)
     fun setSpeed(speed: Float)
+    fun toggleShuffle()
+    fun cycleRepeatMode()
     fun stop()
     fun release()
 }

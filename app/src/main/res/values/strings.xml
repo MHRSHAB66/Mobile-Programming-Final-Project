@@ -135,6 +135,10 @@
     <string name="player_sleep_custom">Custom…</string>
     <string name="player_sleep_custom_title">Custom sleep timer</string>
     <string name="player_sleep_custom_hint">Minutes</string>
+    <string name="player_shuffle">Shuffle</string>
+    <string name="player_repeat_off">Repeat off</string>
+    <string name="player_repeat_one">Repeat one</string>
+    <string name="player_repeat_all">Repeat all</string>
     <string name="player_speed">Playback speed</string>
     <string name="player_speed_value">%1$sx</string>
     <string name="player_queue">Up next</string>

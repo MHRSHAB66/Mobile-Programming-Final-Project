@@ -11,6 +11,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import com.example.project.domain.model.RepeatMode
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.example.project.domain.model.PlaybackState
@@ -130,6 +131,12 @@ class PlayerControllerImpl(
                 speed = c.playbackParameters.speed,
                 hasNext = c.hasNextMediaItem(),
                 hasPrevious = c.hasPreviousMediaItem(),
+                isShuffled = c.shuffleModeEnabled,
+                repeatMode = when (c.repeatMode) {
+                    Player.REPEAT_MODE_ONE -> RepeatMode.ONE
+                    Player.REPEAT_MODE_ALL -> RepeatMode.ALL
+                    else -> RepeatMode.OFF
+                },
             )
         }
     }
@@ -158,9 +165,28 @@ class PlayerControllerImpl(
         else c.seekToPreviousMediaItem()
     }
 
-    override fun seekTo(positionMs: Long) = action { c -> c.seekTo(positionMs) }
+    override fun seekTo(positionMs: Long) {
+        // Optimistically update position in state so the UI slider snaps immediately
+        // instead of waiting for the next ExoPlayer event tick.
+        _state.update { it.copy(positionMs = positionMs) }
+        action { c -> c.seekTo(positionMs) }
+    }
 
     override fun setSpeed(speed: Float) = action { c -> c.setPlaybackSpeed(speed) }
+
+    override fun toggleShuffle() = action { c ->
+        c.shuffleModeEnabled = !c.shuffleModeEnabled
+        refreshState()
+    }
+
+    override fun cycleRepeatMode() = action { c ->
+        c.repeatMode = when (c.repeatMode) {
+            Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
+            Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
+            else -> Player.REPEAT_MODE_OFF
+        }
+        refreshState()
+    }
 
     override fun stop() = action { c ->
         c.stop()

@@ -1,5 +1,6 @@
 package com.example.project.data.player
 
+import android.app.PendingIntent
 import android.content.Intent
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -55,7 +56,15 @@ class MusicService : MediaSessionService() {
             .setLoadControl(loadControl)
             .build()
 
-        mediaSession = MediaSession.Builder(this, player).build()
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+        val sessionActivity = PendingIntent.getActivity(
+            this, 0, launchIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        mediaSession = MediaSession.Builder(this, player)
+            .setSessionActivity(sessionActivity)
+            .build()
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? =

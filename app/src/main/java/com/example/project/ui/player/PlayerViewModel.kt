@@ -82,6 +82,8 @@ class PlayerViewModel(
     fun seekTo(positionMs: Long) = player.seekTo(positionMs)
 
     fun setSpeed(speed: Float) = player.setSpeed(speed)
+    fun toggleShuffle() = player.toggleShuffle()
+    fun cycleRepeatMode() = player.cycleRepeatMode()
 
     fun onToggleLike(song: Song) {
         viewModelScope.launch {
