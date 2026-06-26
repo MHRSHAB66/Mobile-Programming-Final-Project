@@ -82,10 +82,18 @@ fun NowPlayingScreen(
     onBack: () -> Unit,
 ) {
     val state by playerViewModel.playbackState.collectAsStateWithLifecycle()
-    val sleepMinutes by playerViewModel.sleepTimerMinutes.collectAsStateWithLifecycle()
+    val sleepSeconds by playerViewModel.sleepTimerSeconds.collectAsStateWithLifecycle()
     val conversations by playerViewModel.conversations.collectAsStateWithLifecycle()
     val dimens = LocalDimens.current
     val song = state.currentSong
+
+    // Auto-close Now Playing when playback fully stops (e.g. the sleep timer fired and cleared
+    // the queue) so the user isn't left staring at an empty screen — issue #017.
+    var hadSong by remember { mutableStateOf(false) }
+    LaunchedEffect(song) {
+        if (song != null) hadSong = true
+        else if (hadSong) onBack()
+    }
 
     val fallback = MaterialTheme.colorScheme.primary
     val albumColors by rememberAlbumColors(song?.coverImageUrl, fallback)
@@ -202,6 +210,24 @@ fun NowPlayingScreen(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    // Clear textual indicator that this track is playing from the downloaded
+                    // local file rather than streaming — issue #009.
+                    if (song?.isDownloaded == true) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Filled.DownloadDone,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Text(
+                                text = stringResource(R.string.cd_playing_offline),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(start = 4.dp),
+                            )
+                        }
+                    }
                 }
                 if (song?.isDownloaded == true) {
                     IconButton(onClick = {}, enabled = false) {
@@ -315,7 +341,7 @@ fun NowPlayingScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 SleepTimerControl(
-                    activeMinutes = sleepMinutes,
+                    activeSeconds = sleepSeconds,
                     onSelect = playerViewModel::setSleepTimer,
                 )
                 SpeedControl(
@@ -419,32 +445,37 @@ private fun SeekBar(positionMs: Long, durationMs: Long, onSeek: (Long) -> Unit) 
 }
 
 @Composable
-private fun SleepTimerControl(activeMinutes: Int, onSelect: (Int) -> Unit) {
+private fun SleepTimerControl(activeSeconds: Int, onSelect: (Int) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     var showCustomDialog by remember { mutableStateOf(false) }
     var customInput by remember { mutableStateOf("") }
 
+    // onSelect takes SECONDS. The 15-second option is there so the timer can be demoed quickly.
     val presets = listOf(
         0 to R.string.player_sleep_off,
-        15 to R.string.player_sleep_15,
-        30 to R.string.player_sleep_30,
-        60 to R.string.player_sleep_60,
+        15 to R.string.player_sleep_15s,
+        15 * 60 to R.string.player_sleep_15,
+        30 * 60 to R.string.player_sleep_30,
+        60 * 60 to R.string.player_sleep_60,
     )
+
+    val label = when {
+        activeSeconds <= 0 -> stringResource(R.string.player_sleep_timer)
+        activeSeconds < 60 -> "${activeSeconds}s"
+        else -> "${activeSeconds / 60} min"
+    }
 
     Box {
         TextButton(onClick = { expanded = true }) {
             Icon(Icons.Filled.Bedtime, contentDescription = stringResource(R.string.player_sleep_timer))
-            Text(
-                text = if (activeMinutes > 0) "$activeMinutes min" else stringResource(R.string.player_sleep_timer),
-                modifier = Modifier.padding(start = 6.dp),
-            )
+            Text(text = label, modifier = Modifier.padding(start = 6.dp))
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            presets.forEach { (minutes, labelRes) ->
+            presets.forEach { (seconds, labelRes) ->
                 DropdownMenuItem(
                     text = { Text(stringResource(labelRes)) },
                     onClick = {
-                        onSelect(minutes)
+                        onSelect(seconds)
                         expanded = false
                     },
                 )
@@ -477,7 +508,7 @@ private fun SleepTimerControl(activeMinutes: Int, onSelect: (Int) -> Unit) {
                 TextButton(
                     onClick = {
                         val minutes = customInput.toIntOrNull() ?: 0
-                        if (minutes > 0) onSelect(minutes)
+                        if (minutes > 0) onSelect(minutes * 60)
                         showCustomDialog = false
                     }
                 ) { Text(stringResource(R.string.ok)) }

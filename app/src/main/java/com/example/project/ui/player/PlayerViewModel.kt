@@ -54,8 +54,10 @@ class PlayerViewModel(
     private val _effects = Channel<PlayerEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
-    private val _sleepTimerMinutes = MutableStateFlow(0)
-    val sleepTimerMinutes: StateFlow<Int> = _sleepTimerMinutes.asStateFlow()
+    /** Remaining sleep-timer duration in SECONDS (0 = off). Seconds, so we can offer a short
+     *  15-second option that's easy to demo. */
+    private val _sleepTimerSeconds = MutableStateFlow(0)
+    val sleepTimerSeconds: StateFlow<Int> = _sleepTimerSeconds.asStateFlow()
     private var sleepJob: Job? = null
 
     fun playSong(song: Song) = playQueue(listOf(song), 0)
@@ -113,10 +115,11 @@ class PlayerViewModel(
         viewModelScope.launch { chatRepository.shareSong(conversationId, song) }
     }
 
-    fun setSleepTimer(minutes: Int) {
+    /** [totalSeconds] = 0 cancels the timer. Otherwise playback stops after that many seconds. */
+    fun setSleepTimer(totalSeconds: Int) {
         sleepJob?.cancel()
-        _sleepTimerMinutes.value = minutes
-        if (minutes <= 0) {
+        _sleepTimerSeconds.value = totalSeconds
+        if (totalSeconds <= 0) {
             viewModelScope.launch {
                 _effects.send(PlayerEffect.Message(UiText.from(R.string.sleep_timer_cancelled)))
             }
@@ -124,9 +127,12 @@ class PlayerViewModel(
         }
         sleepJob = viewModelScope.launch {
             _effects.send(PlayerEffect.Message(UiText.from(R.string.sleep_timer_set)))
-            delay(minutes * 60_000L)
+            delay(totalSeconds * 1_000L)
             player.stop()
-            _sleepTimerMinutes.value = 0
+            _sleepTimerSeconds.value = 0
+            // Tell the user playback stopped because of the timer (shown as a snackbar by
+            // MainScreen). Now Playing also auto-closes itself when the song clears — issue #017.
+            _effects.send(PlayerEffect.Message(UiText.from(R.string.sleep_timer_ended)))
         }
     }
 }

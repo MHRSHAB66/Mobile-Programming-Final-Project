@@ -6,6 +6,7 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
@@ -32,10 +33,18 @@ class MusicService : MediaSessionService() {
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
             .build()
 
+        // Shorter connect/read timeouts (default is 8 s) so a dead/slow stream URL fails fast and
+        // the player can fail over to the fallback in ~4 s instead of hanging ~8 s — this is the
+        // main cause of the long delay before some songs start (issue #010).
+        val httpDataSourceFactory = DefaultHttpDataSource.Factory()
+            .setConnectTimeoutMs(4_000)
+            .setReadTimeoutMs(4_000)
+            .setAllowCrossProtocolRedirects(true)
+
         // Stream through a disk cache so re-listens / seeks don't re-download.
         val cacheDataSourceFactory = CacheDataSource.Factory()
             .setCache(PlaybackCache.get(this))
-            .setUpstreamDataSourceFactory(DefaultDataSource.Factory(this))
+            .setUpstreamDataSourceFactory(DefaultDataSource.Factory(this, httpDataSourceFactory))
             .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
 
         // Reduce bufferForPlaybackMs so playback starts as soon as ~500 ms is buffered

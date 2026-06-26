@@ -129,6 +129,7 @@
     <string name="now_playing_from">Playing from</string>
     <string name="player_sleep_timer">Sleep timer</string>
     <string name="player_sleep_off">Off</string>
+    <string name="player_sleep_15s">15 seconds (test)</string>
     <string name="player_sleep_15">15 minutes</string>
     <string name="player_sleep_30">30 minutes</string>
     <string name="player_sleep_60">60 minutes</string>
@@ -147,6 +148,7 @@
     <string name="cd_share_to_chat">Share to a friend</string>
     <string name="sleep_timer_set">Sleep timer set</string>
     <string name="sleep_timer_cancelled">Sleep timer cancelled</string>
+    <string name="sleep_timer_ended">Sleep timer ended — playback stopped</string>
 
     <!-- Liked / Recently played -->
     <string name="liked_songs_title">Liked Songs</string>

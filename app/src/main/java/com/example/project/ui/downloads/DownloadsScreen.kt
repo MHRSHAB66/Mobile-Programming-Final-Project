@@ -148,7 +148,18 @@ private fun SwipeableDownloadRow(
             onClick = onClick,
             modifier = Modifier.background(MaterialTheme.colorScheme.background),
             trailing = {
-                DownloadStatusIcon(item)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    DownloadStatusIcon(item)
+                    // Explicit delete button so removing a download doesn't rely on the
+                    // (easy-to-miss, RTL-flipped) swipe gesture — issue #013.
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            Icons.Filled.Delete,
+                            contentDescription = stringResource(R.string.delete),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             },
         )
     }
