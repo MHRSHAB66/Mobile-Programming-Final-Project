@@ -1,0 +1,453 @@
+package com.example.project.ui.nowplaying
+
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.project.R
+import com.example.project.core.util.asTrackTime
+import com.example.project.domain.model.Conversation
+import com.example.project.ui.components.CoverImage
+import com.example.project.ui.components.LikeButton
+import com.example.project.ui.components.bounceClick
+import com.example.project.ui.components.rememberPulse
+import com.example.project.ui.player.PlayerViewModel
+import com.example.project.ui.theme.LocalDimens
+
+@Composable
+fun NowPlayingScreen(
+    playerViewModel: PlayerViewModel,
+    onBack: () -> Unit,
+) {
+    val state by playerViewModel.playbackState.collectAsStateWithLifecycle()
+    val sleepMinutes by playerViewModel.sleepTimerMinutes.collectAsStateWithLifecycle()
+    val conversations by playerViewModel.conversations.collectAsStateWithLifecycle()
+    val dimens = LocalDimens.current
+    val song = state.currentSong
+
+    val fallback = MaterialTheme.colorScheme.primary
+    val dominant by rememberDominantColor(song?.coverImageUrl, fallback)
+    val background = MaterialTheme.colorScheme.background
+
+    var showShareDialog by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                Brush.verticalGradient(
+                    listOf(dominant.copy(alpha = 0.55f), background, background)
+                )
+            )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = dimens.spaceL),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            // Top row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_back))
+                }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        text = stringResource(R.string.now_playing),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = song?.album ?: "",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                IconButton(onClick = { showShareDialog = true }, enabled = song != null) {
+                    Icon(Icons.Outlined.Share, contentDescription = stringResource(R.string.cd_share_to_chat))
+                }
+            }
+
+            Spacer(Modifier.height(dimens.spaceL))
+
+            Box(contentAlignment = Alignment.Center) {
+                // Soft, pulsing halo in the cover's dominant colour while playing.
+                if (state.isPlaying) {
+                    val pulse = rememberPulse()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.84f)
+                            .aspectRatio(1f)
+                            .scale(pulse)
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(dominant.copy(alpha = 0.55f), Color.Transparent)
+                                ),
+                                CircleShape,
+                            )
+                    )
+                }
+                RotatingDisc(
+                    coverUrl = song?.coverImageUrl,
+                    isPlaying = state.isPlaying,
+                    modifier = Modifier
+                        .fillMaxWidth(0.72f)
+                        .aspectRatio(1f),
+                )
+            }
+
+            Spacer(Modifier.height(dimens.spaceL))
+
+            AudioVisualizer(
+                isPlaying = state.isPlaying,
+                color = dominant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+            )
+
+            Spacer(Modifier.height(dimens.spaceM))
+
+            // Title + like
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = song?.title ?: "",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = song?.artistName ?: "",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                IconButton(
+                    onClick = { song?.let(playerViewModel::onDownload) },
+                    enabled = song != null,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Download,
+                        contentDescription = stringResource(R.string.download),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                LikeButton(
+                    isLiked = song?.isLiked == true,
+                    onToggle = { song?.let(playerViewModel::onToggleLike) },
+                    iconSize = 30.dp,
+                )
+            }
+
+            SeekBar(
+                positionMs = state.positionMs,
+                durationMs = state.durationMs,
+                onSeek = playerViewModel::seekTo,
+            )
+
+            // Transport controls
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                IconButton(onClick = playerViewModel::previous, enabled = state.hasPrevious) {
+                    Icon(
+                        Icons.Filled.SkipPrevious,
+                        contentDescription = stringResource(R.string.cd_previous),
+                        modifier = Modifier.size(40.dp),
+                    )
+                }
+                Spacer(Modifier.size(dimens.spaceL))
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(72.dp),
+                ) {
+                    IconButton(onClick = playerViewModel::togglePlayPause) {
+                        Icon(
+                            imageVector = if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                            contentDescription = stringResource(
+                                if (state.isPlaying) R.string.cd_pause else R.string.cd_play
+                            ),
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(40.dp),
+                        )
+                    }
+                }
+                Spacer(Modifier.size(dimens.spaceL))
+                IconButton(onClick = playerViewModel::next, enabled = state.hasNext) {
+                    Icon(
+                        Icons.Filled.SkipNext,
+                        contentDescription = stringResource(R.string.cd_next),
+                        modifier = Modifier.size(40.dp),
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(dimens.spaceS))
+
+            // Sleep timer + speed
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                SleepTimerControl(
+                    activeMinutes = sleepMinutes,
+                    onSelect = playerViewModel::setSleepTimer,
+                )
+                SpeedControl(
+                    speed = state.speed,
+                    onSelect = playerViewModel::setSpeed,
+                )
+            }
+        }
+    }
+
+    if (showShareDialog && song != null) {
+        ShareDialog(
+            conversations = conversations,
+            onDismiss = { showShareDialog = false },
+            onShare = { conversationId ->
+                playerViewModel.shareSongToConversation(conversationId, song)
+                showShareDialog = false
+            },
+        )
+    }
+}
+
+@Composable
+private fun RotatingDisc(coverUrl: String?, isPlaying: Boolean, modifier: Modifier = Modifier) {
+    val rotation = remember { Animatable(0f) }
+    LaunchedEffect(isPlaying) {
+        if (isPlaying) {
+            while (true) {
+                rotation.animateTo(
+                    targetValue = rotation.value + 360f,
+                    animationSpec = tween(durationMillis = 9000, easing = LinearEasing),
+                )
+                rotation.snapTo(rotation.value % 360f)
+            }
+        }
+    }
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape)
+                .background(Color.Black)
+                .rotate(rotation.value),
+            contentAlignment = Alignment.Center,
+        ) {
+            CoverImage(
+                url = coverUrl,
+                contentDescription = stringResource(R.string.cd_cover_art),
+                modifier = Modifier
+                    .fillMaxSize(0.92f)
+                    .clip(CircleShape),
+                cornerRadius = 0,
+            )
+            // CD center hole
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.background)
+            )
+        }
+    }
+}
+
+@Composable
+private fun SeekBar(positionMs: Long, durationMs: Long, onSeek: (Long) -> Unit) {
+    var dragging by remember { mutableStateOf(false) }
+    var dragValue by remember { mutableFloatStateOf(0f) }
+    val progress = if (durationMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
+    val sliderValue = if (dragging) dragValue else progress
+    val shownPosition = if (dragging) (dragValue * durationMs).toLong() else positionMs
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Slider(
+            value = sliderValue,
+            onValueChange = {
+                dragging = true
+                dragValue = it
+            },
+            onValueChangeFinished = {
+                onSeek((dragValue * durationMs).toLong())
+                dragging = false
+            },
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = shownPosition.asTrackTime(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = durationMs.asTrackTime(),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SleepTimerControl(activeMinutes: Int, onSelect: (Int) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    val options = listOf(
+        0 to R.string.player_sleep_off,
+        15 to R.string.player_sleep_15,
+        30 to R.string.player_sleep_30,
+        60 to R.string.player_sleep_60,
+    )
+    Box {
+        TextButton(onClick = { expanded = true }) {
+            Icon(Icons.Filled.Bedtime, contentDescription = stringResource(R.string.player_sleep_timer))
+            Text(
+                text = if (activeMinutes > 0) "$activeMinutes" else stringResource(R.string.player_sleep_timer),
+                modifier = Modifier.padding(start = 6.dp),
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { (minutes, labelRes) ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(labelRes)) },
+                    onClick = {
+                        onSelect(minutes)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SpeedControl(speed: Float, onSelect: (Float) -> Unit) {
+    val speeds = listOf(1f, 1.5f, 2f)
+    TextButton(onClick = {
+        val next = speeds[(speeds.indexOf(speed).coerceAtLeast(0) + 1) % speeds.size]
+        onSelect(next)
+    }) {
+        Icon(Icons.Filled.Speed, contentDescription = stringResource(R.string.player_speed))
+        Text(
+            text = stringResource(R.string.player_speed_value, speed.toString().removeSuffix(".0")),
+            modifier = Modifier.padding(start = 6.dp),
+        )
+    }
+}
+
+@Composable
+private fun ShareDialog(
+    conversations: List<Conversation>,
+    onDismiss: () -> Unit,
+    onShare: (String) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.cd_share_to_chat)) },
+        text = {
+            LazyColumn {
+                items(conversations, key = { it.id }) { conversation ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(MaterialTheme.shapes.small)
+                            .bounceClick(onClick = { onShare(conversation.id) })
+                            .padding(vertical = 12.dp, horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            text = conversation.peer.displayName,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            text = stringResource(R.string.cd_send),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+        },
+    )
+}

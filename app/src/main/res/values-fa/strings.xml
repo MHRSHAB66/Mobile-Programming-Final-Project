@@ -1,0 +1,190 @@
+<resources>
+    <string name="app_name">ملودیفای</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">خانه</string>
+    <string name="nav_search">جستجو</string>
+    <string name="nav_downloads">دانلودها</string>
+    <string name="nav_playlists">پلی‌لیست‌ها</string>
+    <string name="nav_profile">پروفایل</string>
+
+    <!-- Top bar -->
+    <string name="cd_app_logo">لوگوی برنامه</string>
+    <string name="cd_profile_image">تصویر پروفایل</string>
+    <string name="cd_notifications">اعلان‌ها</string>
+    <string name="cd_settings">تنظیمات</string>
+    <string name="cd_back">بازگشت</string>
+    <string name="cd_cover_art">کاور آهنگ</string>
+
+    <!-- Common -->
+    <string name="retry">تلاش دوباره</string>
+    <string name="loading">در حال بارگذاری…</string>
+    <string name="error_generic">خطایی رخ داد</string>
+    <string name="error_offline">به نظر می‌رسد آفلاین هستید</string>
+    <string name="empty_generic">هنوز چیزی اینجا نیست</string>
+    <string name="cancel">انصراف</string>
+    <string name="ok">باشه</string>
+    <string name="confirm">تأیید</string>
+    <string name="delete">حذف</string>
+    <string name="remove">حذف</string>
+    <string name="play_all">پخش همه</string>
+    <string name="shuffle">پخش تصادفی</string>
+    <string name="see_all">مشاهده همه</string>
+    <string name="follow">دنبال کردن</string>
+    <string name="following">دنبال می‌کنید</string>
+    <string name="unfollow">لغو دنبال کردن</string>
+    <string name="clear">پاک کردن</string>
+    <string name="sort">مرتب‌سازی</string>
+    <string name="songs_count">%1$d آهنگ</string>
+
+    <!-- Home -->
+    <string name="home_greeting">خوش آمدید</string>
+    <string name="home_daily">مخصوص شما</string>
+    <string name="home_quick_liked">آهنگ‌های پسندیده</string>
+    <string name="home_quick_recent">اخیراً شنیده‌شده</string>
+    <string name="home_quick_playlists">پلی‌لیست‌های من</string>
+    <string name="home_quick_artists">هنرمندان برتر</string>
+    <string name="home_section_popular">محبوب‌ترین‌ها</string>
+    <string name="home_section_new">جدیدترین‌ها</string>
+    <string name="home_section_global">پلی‌لیست‌های جهانی</string>
+    <string name="home_section_local">پلی‌لیست‌های محلی</string>
+
+    <!-- Search -->
+    <string name="search_hint">آهنگ، خواننده، پلی‌لیست یا کاربر…</string>
+    <string name="search_filter_song">آهنگ‌ها</string>
+    <string name="search_filter_artist">هنرمندان</string>
+    <string name="search_filter_playlist">پلی‌لیست‌ها</string>
+    <string name="search_filter_user">کاربران</string>
+    <string name="search_history">جستجوهای اخیر</string>
+    <string name="search_clear_history">پاک کردن تاریخچه</string>
+    <string name="search_no_results">نتیجه‌ای برای «%1$s» یافت نشد</string>
+    <string name="search_prompt">آهنگ بعدی مورد علاقه‌ات را پیدا کن</string>
+    <string name="cd_remove_history_item">حذف از تاریخچه</string>
+
+    <!-- Downloads -->
+    <string name="downloads_title">دانلودها</string>
+    <string name="download">دانلود</string>
+    <string name="downloaded">دانلود شد</string>
+    <string name="downloading">در حال دانلود…</string>
+    <string name="download_failed">دانلود ناموفق بود</string>
+    <string name="downloads_empty">هنوز آهنگی دانلود نشده است</string>
+    <string name="premium_required_title">نیاز به اشتراک ویژه</string>
+    <string name="premium_required_message">دانلود آهنگ برای پخش آفلاین از امکانات اشتراک ویژه است. برای دانلود، حساب خود را ارتقا دهید.</string>
+    <string name="upgrade">ارتقا</string>
+    <string name="sort_title">عنوان</string>
+    <string name="sort_artist">هنرمند</string>
+    <string name="sort_recent">جدیدترین</string>
+    <string name="cd_swipe_delete">برای حذف بکشید</string>
+    <string name="download_started">دانلود آغاز شد</string>
+    <string name="download_removed">از دانلودها حذف شد</string>
+
+    <!-- Playlists -->
+    <string name="playlists_title">پلی‌لیست‌ها</string>
+    <string name="playlists_global">موسیقی جهانی</string>
+    <string name="playlists_local">موسیقی داخلی</string>
+    <string name="playlists_user">پلی‌لیست‌های شما</string>
+
+    <!-- Profile -->
+    <string name="profile_title">پروفایل</string>
+    <string name="profile_premium_badge">ویژه</string>
+    <string name="profile_free_badge">حساب عادی</string>
+    <string name="profile_upgrade">ارتقا به اشتراک ویژه</string>
+    <string name="profile_renew">تمدید اشتراک ویژه</string>
+    <string name="profile_change_avatar">تغییر آواتار</string>
+    <string name="profile_followed">دنبال‌شده‌ها</string>
+    <string name="profile_public_playlists">پلی‌لیست‌های عمومی</string>
+    <string name="profile_settings">تنظیمات</string>
+    <string name="profile_messages">پیام‌ها</string>
+    <string name="upgrade_in_progress">در حال فعال‌سازی اشتراک ویژه…</string>
+    <string name="upgrade_success">به اشتراک ویژه خوش آمدید! دانلود آفلاین فعال شد.</string>
+    <string name="avatar_changed">آواتار به‌روزرسانی شد</string>
+    <string name="followers_count">%1$s دنبال‌کننده</string>
+
+    <!-- Settings -->
+    <string name="settings_title">تنظیمات</string>
+    <string name="settings_language">زبان</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_fa">فارسی</string>
+    <string name="settings_theme">پوسته</string>
+    <string name="settings_theme_system">پیش‌فرض سیستم</string>
+    <string name="settings_theme_light">روشن</string>
+    <string name="settings_theme_dark">تاریک</string>
+    <string name="settings_font_size">اندازه فونت</string>
+    <string name="settings_font_small">کوچک</string>
+    <string name="settings_font_normal">معمولی</string>
+    <string name="settings_font_large">بزرگ</string>
+    <string name="settings_account">حساب کاربری</string>
+    <string name="settings_logout">خروج از حساب</string>
+    <string name="settings_logout_confirm">آیا برای خروج از حساب مطمئن هستید؟</string>
+    <string name="logged_out">خروج انجام شد (شبیه‌سازی)</string>
+
+    <!-- Player / mini player / now playing -->
+    <string name="cd_play">پخش</string>
+    <string name="cd_pause">توقف</string>
+    <string name="cd_next">آهنگ بعدی</string>
+    <string name="cd_previous">آهنگ قبلی</string>
+    <string name="now_playing">در حال پخش</string>
+    <string name="now_playing_from">پخش از</string>
+    <string name="player_sleep_timer">تایمر خواب</string>
+    <string name="player_sleep_off">خاموش</string>
+    <string name="player_sleep_15">۱۵ دقیقه</string>
+    <string name="player_sleep_30">۳۰ دقیقه</string>
+    <string name="player_sleep_60">۶۰ دقیقه</string>
+    <string name="player_speed">سرعت پخش</string>
+    <string name="player_speed_value">%1$s×</string>
+    <string name="player_queue">در صف پخش</string>
+    <string name="cd_like">پسندیدن</string>
+    <string name="cd_unlike">حذف پسند</string>
+    <string name="cd_share_to_chat">ارسال برای دوست</string>
+    <string name="sleep_timer_set">تایمر خواب تنظیم شد</string>
+    <string name="sleep_timer_cancelled">تایمر خواب لغو شد</string>
+
+    <!-- Liked / Recently played -->
+    <string name="liked_songs_title">آهنگ‌های پسندیده</string>
+    <string name="liked_songs_subtitle">آهنگ‌هایی که دوست داری، یکجا</string>
+    <string name="liked_songs_empty">آهنگ‌هایی که می‌پسندی اینجا نمایش داده می‌شوند</string>
+    <string name="recently_played_title">اخیراً شنیده‌شده</string>
+    <string name="recently_played_empty">آهنگ‌هایی که پخش می‌کنی اینجا ظاهر می‌شوند</string>
+    <string name="song_liked">به آهنگ‌های پسندیده اضافه شد</string>
+    <string name="song_unliked">از آهنگ‌های پسندیده حذف شد</string>
+
+    <!-- Artists / followed -->
+    <string name="artist_title">هنرمند</string>
+    <string name="followed_title">دنبال‌شده‌ها</string>
+    <string name="followed_empty">هنوز کسی را دنبال نمی‌کنید</string>
+    <string name="top_songs">محبوب</string>
+    <string name="user_unfollowed">لغو دنبال کردن انجام شد</string>
+    <string name="user_followed">دنبال شد</string>
+
+    <!-- Chat / social -->
+    <string name="chats_title">پیام‌ها</string>
+    <string name="chat_empty">هنوز گفتگویی ندارید</string>
+    <string name="chat_message_hint">پیام…</string>
+    <string name="cd_send">ارسال</string>
+    <string name="chat_typing">در حال نوشتن…</string>
+    <string name="chat_online">آنلاین</string>
+    <string name="chat_offline">آفلاین</string>
+    <string name="chat_status_sending">در حال ارسال</string>
+    <string name="chat_status_sent">ارسال شد</string>
+    <string name="chat_status_read">خوانده شد</string>
+    <string name="chat_shared_song">یک آهنگ به اشتراک گذاشت</string>
+    <string name="chat_no_messages">سلام کن 👋</string>
+    <string name="cd_message_sending">در حال ارسال</string>
+    <string name="cd_message_sent">تحویل داده شد</string>
+    <string name="cd_message_read">خوانده شد</string>
+
+    <!-- Notifications screen -->
+    <string name="notifications_title">اعلان‌ها</string>
+    <string name="notifications_empty">اعلان جدیدی نیست</string>
+
+    <!-- Media notification channel -->
+    <string name="playback_channel_name">پخش موسیقی</string>
+    <string name="playback_channel_desc">کنترل‌های پخش موسیقی</string>
+
+    <!-- Auth / login -->
+    <string name="auth_tagline">موسیقی و دوستانت، همه در یکجا</string>
+    <string name="auth_name_label">نام شما</string>
+    <string name="auth_handle_label">نام کاربری (اختیاری)</string>
+    <string name="auth_login_button">ساخت حساب / ورود</string>
+    <string name="auth_demo_button">ادامه به‌عنوان کاربر نمونه</string>
+</resources>

@@ -1,0 +1,130 @@
+package com.example.project.ui.player
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.project.R
+import com.example.project.core.util.UiText
+import com.example.project.domain.model.Conversation
+import com.example.project.domain.model.PlaybackState
+import com.example.project.domain.model.Song
+import com.example.project.domain.player.PlayerController
+import com.example.project.domain.repository.ChatRepository
+import com.example.project.domain.repository.MusicRepository
+import com.example.project.domain.usecase.DownloadResult
+import com.example.project.domain.usecase.DownloadSongUseCase
+import com.example.project.domain.usecase.PlaySongsUseCase
+import com.example.project.domain.usecase.ToggleLikeUseCase
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+
+/** One-time effects surfaced by the player (snackbars, premium prompt). */
+sealed interface PlayerEffect {
+    data class Message(val text: UiText) : PlayerEffect
+    data object NeedsPremium : PlayerEffect
+}
+
+/**
+ * App-scoped ViewModel for playback and cross-screen song actions (play, like, download,
+ * share). Sharing one instance avoids duplicating these interactions in every screen's
+ * ViewModel; feature ViewModels still own their screen data.
+ */
+class PlayerViewModel(
+    private val player: PlayerController,
+    private val playSongs: PlaySongsUseCase,
+    private val toggleLike: ToggleLikeUseCase,
+    private val downloadSong: DownloadSongUseCase,
+    private val chatRepository: ChatRepository,
+    private val musicRepository: MusicRepository,
+) : ViewModel() {
+
+    val playbackState: StateFlow<PlaybackState> = player.state
+
+    /** Conversations available as "share song" targets from Now Playing. */
+    val conversations: StateFlow<List<Conversation>> = chatRepository.observeConversations()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    private val _effects = Channel<PlayerEffect>(Channel.BUFFERED)
+    val effects = _effects.receiveAsFlow()
+
+    private val _sleepTimerMinutes = MutableStateFlow(0)
+    val sleepTimerMinutes: StateFlow<Int> = _sleepTimerMinutes.asStateFlow()
+    private var sleepJob: Job? = null
+
+    fun playSong(song: Song) = playQueue(listOf(song), 0)
+
+    /** Resolves a song id (e.g. from a shared chat song card) and plays it. */
+    fun playSongById(songId: String) {
+        viewModelScope.launch {
+            musicRepository.getSong(songId)?.let { playSongs(listOf(it), 0) }
+        }
+    }
+
+    fun playQueue(songs: List<Song>, startIndex: Int) {
+        viewModelScope.launch { playSongs(songs, startIndex) }
+    }
+
+    fun playShuffled(songs: List<Song>) {
+        if (songs.isEmpty()) return
+        playQueue(songs.shuffled(), 0)
+    }
+
+    fun togglePlayPause() = player.togglePlayPause()
+    fun next() = player.next()
+    fun previous() = player.previous()
+    fun seekTo(positionMs: Long) = player.seekTo(positionMs)
+
+    fun setSpeed(speed: Float) = player.setSpeed(speed)
+
+    fun onToggleLike(song: Song) {
+        viewModelScope.launch {
+            val nowLiked = toggleLike(song)
+            _effects.send(
+                PlayerEffect.Message(
+                    UiText.from(if (nowLiked) R.string.song_liked else R.string.song_unliked)
+                )
+            )
+        }
+    }
+
+    fun onDownload(song: Song) {
+        viewModelScope.launch {
+            when (downloadSong(song)) {
+                DownloadResult.Started ->
+                    _effects.send(PlayerEffect.Message(UiText.from(R.string.download_started)))
+                DownloadResult.NeedsPremium ->
+                    _effects.send(PlayerEffect.NeedsPremium)
+                DownloadResult.AlreadyDownloaded ->
+                    _effects.send(PlayerEffect.Message(UiText.from(R.string.downloaded)))
+            }
+        }
+    }
+
+    fun shareSongToConversation(conversationId: String, song: Song) {
+        viewModelScope.launch { chatRepository.shareSong(conversationId, song) }
+    }
+
+    fun setSleepTimer(minutes: Int) {
+        sleepJob?.cancel()
+        _sleepTimerMinutes.value = minutes
+        if (minutes <= 0) {
+            viewModelScope.launch {
+                _effects.send(PlayerEffect.Message(UiText.from(R.string.sleep_timer_cancelled)))
+            }
+            return
+        }
+        sleepJob = viewModelScope.launch {
+            _effects.send(PlayerEffect.Message(UiText.from(R.string.sleep_timer_set)))
+            delay(minutes * 60_000L)
+            player.stop()
+            _sleepTimerMinutes.value = 0
+        }
+    }
+}

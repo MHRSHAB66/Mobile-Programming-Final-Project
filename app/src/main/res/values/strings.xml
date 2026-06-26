@@ -1,0 +1,190 @@
+<resources>
+    <string name="app_name">Melodify</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_downloads">Downloads</string>
+    <string name="nav_playlists">Playlists</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Top bar -->
+    <string name="cd_app_logo">App logo</string>
+    <string name="cd_profile_image">Profile picture</string>
+    <string name="cd_notifications">Notifications</string>
+    <string name="cd_settings">Settings</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_cover_art">Cover art</string>
+
+    <!-- Common -->
+    <string name="retry">Retry</string>
+    <string name="loading">Loading…</string>
+    <string name="error_generic">Something went wrong</string>
+    <string name="error_offline">You appear to be offline</string>
+    <string name="empty_generic">Nothing here yet</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="confirm">Confirm</string>
+    <string name="delete">Delete</string>
+    <string name="remove">Remove</string>
+    <string name="play_all">Play all</string>
+    <string name="shuffle">Shuffle</string>
+    <string name="see_all">See all</string>
+    <string name="follow">Follow</string>
+    <string name="following">Following</string>
+    <string name="unfollow">Unfollow</string>
+    <string name="clear">Clear</string>
+    <string name="sort">Sort</string>
+    <string name="songs_count">%1$d songs</string>
+
+    <!-- Home -->
+    <string name="home_greeting">Good to see you</string>
+    <string name="home_daily">Made for you</string>
+    <string name="home_quick_liked">Liked Songs</string>
+    <string name="home_quick_recent">Recently Played</string>
+    <string name="home_quick_playlists">My Playlists</string>
+    <string name="home_quick_artists">Top Artists</string>
+    <string name="home_section_popular">Most Popular</string>
+    <string name="home_section_new">New Releases</string>
+    <string name="home_section_global">Global Playlists</string>
+    <string name="home_section_local">Local Playlists</string>
+
+    <!-- Search -->
+    <string name="search_hint">Songs, artists, playlists, people…</string>
+    <string name="search_filter_song">Songs</string>
+    <string name="search_filter_artist">Artists</string>
+    <string name="search_filter_playlist">Playlists</string>
+    <string name="search_filter_user">People</string>
+    <string name="search_history">Recent searches</string>
+    <string name="search_clear_history">Clear history</string>
+    <string name="search_no_results">No results for \"%1$s\"</string>
+    <string name="search_prompt">Find your next favourite track</string>
+    <string name="cd_remove_history_item">Remove from history</string>
+
+    <!-- Downloads -->
+    <string name="downloads_title">Downloads</string>
+    <string name="download">Download</string>
+    <string name="downloaded">Downloaded</string>
+    <string name="downloading">Downloading…</string>
+    <string name="download_failed">Download failed</string>
+    <string name="downloads_empty">No downloaded songs yet</string>
+    <string name="premium_required_title">Premium required</string>
+    <string name="premium_required_message">Downloading songs for offline listening is a Premium feature. Upgrade to download.</string>
+    <string name="upgrade">Upgrade</string>
+    <string name="sort_title">Title</string>
+    <string name="sort_artist">Artist</string>
+    <string name="sort_recent">Recently added</string>
+    <string name="cd_swipe_delete">Swipe to delete</string>
+    <string name="download_started">Download started</string>
+    <string name="download_removed">Removed from downloads</string>
+
+    <!-- Playlists -->
+    <string name="playlists_title">Playlists</string>
+    <string name="playlists_global">Global Music</string>
+    <string name="playlists_local">Local Music</string>
+    <string name="playlists_user">Your Playlists</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Profile</string>
+    <string name="profile_premium_badge">Premium</string>
+    <string name="profile_free_badge">Free account</string>
+    <string name="profile_upgrade">Upgrade to Premium</string>
+    <string name="profile_renew">Renew Premium</string>
+    <string name="profile_change_avatar">Change avatar</string>
+    <string name="profile_followed">Following</string>
+    <string name="profile_public_playlists">Public playlists</string>
+    <string name="profile_settings">Settings</string>
+    <string name="profile_messages">Messages</string>
+    <string name="upgrade_in_progress">Activating Premium…</string>
+    <string name="upgrade_success">Welcome to Premium! Offline downloads unlocked.</string>
+    <string name="avatar_changed">Avatar updated</string>
+    <string name="followers_count">%1$s followers</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_fa">فارسی</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System default</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_font_size">Font size</string>
+    <string name="settings_font_small">Small</string>
+    <string name="settings_font_normal">Normal</string>
+    <string name="settings_font_large">Large</string>
+    <string name="settings_account">Account</string>
+    <string name="settings_logout">Log out</string>
+    <string name="settings_logout_confirm">Are you sure you want to log out?</string>
+    <string name="logged_out">Logged out (simulated)</string>
+
+    <!-- Player / mini player / now playing -->
+    <string name="cd_play">Play</string>
+    <string name="cd_pause">Pause</string>
+    <string name="cd_next">Next track</string>
+    <string name="cd_previous">Previous track</string>
+    <string name="now_playing">Now Playing</string>
+    <string name="now_playing_from">Playing from</string>
+    <string name="player_sleep_timer">Sleep timer</string>
+    <string name="player_sleep_off">Off</string>
+    <string name="player_sleep_15">15 minutes</string>
+    <string name="player_sleep_30">30 minutes</string>
+    <string name="player_sleep_60">60 minutes</string>
+    <string name="player_speed">Playback speed</string>
+    <string name="player_speed_value">%1$sx</string>
+    <string name="player_queue">Up next</string>
+    <string name="cd_like">Like</string>
+    <string name="cd_unlike">Unlike</string>
+    <string name="cd_share_to_chat">Share to a friend</string>
+    <string name="sleep_timer_set">Sleep timer set</string>
+    <string name="sleep_timer_cancelled">Sleep timer cancelled</string>
+
+    <!-- Liked / Recently played -->
+    <string name="liked_songs_title">Liked Songs</string>
+    <string name="liked_songs_subtitle">Songs you love, all in one place</string>
+    <string name="liked_songs_empty">Songs you like will appear here</string>
+    <string name="recently_played_title">Recently Played</string>
+    <string name="recently_played_empty">Tracks you play will show up here</string>
+    <string name="song_liked">Added to Liked Songs</string>
+    <string name="song_unliked">Removed from Liked Songs</string>
+
+    <!-- Artists / followed -->
+    <string name="artist_title">Artist</string>
+    <string name="followed_title">Following</string>
+    <string name="followed_empty">You are not following anyone yet</string>
+    <string name="top_songs">Popular</string>
+    <string name="user_unfollowed">Unfollowed</string>
+    <string name="user_followed">Following</string>
+
+    <!-- Chat / social -->
+    <string name="chats_title">Messages</string>
+    <string name="chat_empty">No conversations yet</string>
+    <string name="chat_message_hint">Message…</string>
+    <string name="cd_send">Send</string>
+    <string name="chat_typing">is typing…</string>
+    <string name="chat_online">Online</string>
+    <string name="chat_offline">Offline</string>
+    <string name="chat_status_sending">Sending</string>
+    <string name="chat_status_sent">Sent</string>
+    <string name="chat_status_read">Read</string>
+    <string name="chat_shared_song">Shared a song</string>
+    <string name="chat_no_messages">Say hi 👋</string>
+    <string name="cd_message_sending">Sending</string>
+    <string name="cd_message_sent">Delivered</string>
+    <string name="cd_message_read">Read</string>
+
+    <!-- Notifications screen -->
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_empty">No new notifications</string>
+
+    <!-- Media notification channel -->
+    <string name="playback_channel_name">Playback</string>
+    <string name="playback_channel_desc">Media playback controls</string>
+
+    <!-- Auth / login -->
+    <string name="auth_tagline">Your music and friends, in one place</string>
+    <string name="auth_name_label">Your name</string>
+    <string name="auth_handle_label">Username (optional)</string>
+    <string name="auth_login_button">Create account / Log in</string>
+    <string name="auth_demo_button">Continue as demo user</string>
+</resources>
