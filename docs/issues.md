@@ -4,15 +4,26 @@
 برای هر مشکل این اطلاعات رو بنویس:
 
 ```
-## [شماره] عنوان
+## #XXX — عنوان مشکل
 
 - **شدت:** Critical / High / Medium / Low
 - **پیدا کرده:** [اسم]
-- **باید حل کنه:** [اسم + برنچ]
-- **فایل‌های مرتبط:** ...
-- **توضیح:** ...
-- **وضعیت:** Open / In Progress / Fixed
+- **باید حل کنه:** [اسم] — `[برنچ]`
+- **فایل‌های مرتبط:** `...`
+- **وضعیت:** Open
+
+**توضیح:**
+...
 ```
+
+### وضعیت‌های ممکن
+
+| وضعیت | معنی |
+|---|---|
+| `Open` | مشکل پیدا شده، هنوز کسی روش کار نکرده |
+| `In Progress` | داره کار می‌شه روش |
+| `✅ Fixed — [تاریخ] by [اسم]` | حل شده — commit یا branch رو بنویس |
+| `⏭ Skipped — [دلیل]` | عمداً رد شد (مثلاً کم‌اهمیته یا وقت نداریم) |
 
 ---
 
@@ -165,12 +176,152 @@ MiniPlayer باید همیشه (در همه route‌ها) نمایش داده ب
 
 ---
 
+---
+
+## #006 — MiniPlayer دکمه prev ندارد
+
+- **شدت:** High
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Mehrdad — `mehrdad/playback-download`
+- **فایل‌های مرتبط:** `ui/components/MiniPlayer.kt`
+- **وضعیت:** Open
+
+**توضیح:**
+MiniPlayer فقط دکمه play/pause و next دارد. دکمه prev (قبلی) ندارد.
+در `NowPlayingScreen` prev هست ولی در `MiniPlayer.kt` باید اضافه بشه.
+
+---
+
+## #007 — Sleep Timer فقط مقادیر ثابت دارد — باید custom input داشته باشد
+
+- **شدت:** Low
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Mehrdad — `mehrdad/playback-download`
+- **فایل‌های مرتبط:** `ui/player/PlayerViewModel.kt`، `ui/nowplaying/NowPlayingScreen.kt`
+- **وضعیت:** Open
+
+**توضیح:**
+Sleep timer فعلاً احتمالاً با مقادیر ثابت (۱۵/۳۰/۶۰ دقیقه) کار می‌کنه.
+بهتره کاربر بتونه هر عددی بذاره — مثلاً با یه `TextField` عددی یا `Slider`.
+
+**راه حل پیشنهادی:**
+یه dialog با ورودی دقیقه (TextField یا NumberPicker) اضافه کن که بعد از تأیید، timer ست بشه.
+
+---
+
+## #008 — نمی‌شود وضعیت Premium رو برای تست برگرداند
+
+- **شدت:** Medium (فقط برای تست مهمه)
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Hadi — `hadi/data-auth-chat`
+- **فایل‌های مرتبط:** `ui/profile/ProfileScreen.kt`، `ui/profile/ProfileViewModel.kt`، `data/local/datastore/SettingsDataStore.kt`
+- **وضعیت:** Open
+
+**توضیح:**
+وقتی کاربر Premium می‌شه، راهی برای برگشت به حالت عادی وجود نداره.
+در اپ‌های واقعی این منطقی هست، ولی ما برای تست (مثلاً نشون دادن پیام "نیاز به Premium داری") باید بتونیم حالت رو عوض کنیم.
+
+**راه حل پیشنهادی:**
+یه دکمه "Revoke Premium" فقط در debug build با `BuildConfig.DEBUG` چک بذار.
+یا روش ساده‌تر: long-press روی premium badge → confirmation dialog → reset to free.
+
+---
+
+## #009 — معلوم نیست آهنگ دانلود‌شده از فایل محلی پخش می‌شه یا استریم
+
+- **شدت:** Medium (برای دمو مهمه)
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Mehrdad — `mehrdad/playback-download`
+- **فایل‌های مرتبط:** `ui/nowplaying/NowPlayingScreen.kt`، `ui/downloads/DownloadsScreen.kt`
+- **وضعیت:** Open
+
+**توضیح:**
+وقتی آهنگی دانلود شده و از فایل محلی پخش می‌شه، هیچ نشانه بصری در NowPlayingScreen یا MiniPlayer وجود نداره.
+برای TA و دمو خیلی مهمه که این تفاوت مشخص باشه.
+
+**راه حل پیشنهادی:**
+در `NowPlayingScreen` یه آیکون کوچک (مثل download/offline icon) نمایش بده وقتی `song.localPath != null`.
+
+**چطور بفهمیم آهنگ local عه:**
+در `PlayerViewModel`، `playbackState.currentSong?.localPath` رو چک کن — اگه null نباشه، از فایل محلی داره پخش می‌شه.
+
+---
+
+## #010 — تأخیر در شروع پخش وقتی روی آهنگ می‌زنی
+
+- **شدت:** Medium
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Mehrdad — `mehrdad/playback-download`
+- **فایل‌های مرتبط:** `data/player/PlayerControllerImpl.kt`، `data/player/MusicService.kt`
+- **وضعیت:** Open
+
+**توضیح:**
+وقتی روی یه آهنگ می‌زنی، بعضی وقت‌ها چند ثانیه طول می‌کشه تا پخش شروع بشه.
+این با مشکل #003 (تأخیر seek) فرق داره — اینجا مشکل buffering اولیه هست نه seek.
+
+**علت احتمالی:**
+ExoPlayer باید ابتدا به URL وصل بشه و buffer اولیه رو بگیره.
+برای دمو، بهتره روی آهنگ‌های دانلودشده (local file) تست کنی — باید فوری شروع کنه.
+
+---
+
+## #011 — پس‌زمینه NowPlaying فقط یک رنگ dominant دارد — باید animated multi-color gradient باشد
+
+- **شدت:** Low (زیبایی‌شناختی)
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Mehrdad — `mehrdad/playback-download`
+- **فایل‌های مرتبط:** `ui/nowplaying/DominantColor.kt`، `ui/nowplaying/NowPlayingScreen.kt`
+- **وضعیت:** Open
+
+**توضیح:**
+فعلاً `DominantColor.kt` فقط یه رنگ dominant از کاور استخراج می‌کنه و پس‌زمینه رو با اون رنگ (ثابت) پر می‌کنه.
+هدف: همه رنگ‌های اصلی کاور با هم استخراج بشن و یه gradient انیمیشن‌دار بسازن که آروم بین اون رنگ‌ها شناور باشه — شبیه کاری که `AnimatedGradient.kt` توی Home Hero انجام می‌ده.
+
+**راه حل پیشنهادی:**
+1. از Palette چند رنگ بگیر (نه فقط dominant — vibrant، muted، darkVibrant هم):
+   ```kotlin
+   val colors = listOf(
+       palette.vibrantSwatch?.rgb,
+       palette.mutedSwatch?.rgb,
+       palette.darkVibrantSwatch?.rgb,
+       palette.lightMutedSwatch?.rgb,
+   ).filterNotNull().map { Color(it) }
+   ```
+2. با `rememberAnimatedBrandGradient(colors)` (همون تابعی که Home Hero استفاده می‌کنه) یه gradient متحرک بساز.
+3. این gradient رو به عنوان پس‌زمینه NowPlayingScreen استفاده کن.
+
+**نکته:** `rememberAnimatedBrandGradient` قبلاً در `ui/components/AnimatedGradient.kt` وجود داره — نیازی به نوشتن از صفر نیست.
+
+---
+
+## #012 — AudioVisualizer به صدای واقعی واکنش نشان نمی‌دهد
+
+- **شدت:** Low (زیبایی‌شناختی)
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Mehrdad — `mehrdad/playback-download`
+- **فایل‌های مرتبط:** `ui/nowplaying/AudioVisualizer.kt`
+- **وضعیت:** Open
+
+**توضیح:**
+Visualizer فعلی یه انیمیشن ثابت است که فقط بالا و پایین می‌رود.
+به frequency یا amplitude واقعی صدای آهنگ وصل نیست.
+
+**محدودیت تکنیکی مهم:**
+برای Visualizer واقعی در Android، باید از `android.media.audiofx.Visualizer` API استفاده کرد.
+این API نیاز به permission `RECORD_AUDIO` دارد و در Compose باید با Canvas هندل بشه.
+
+**گزینه‌ها:**
+1. **ساده (توصیه‌شده):** تعداد bar بیشتر، ارتفاع‌های random متنوع‌تر، و سرعت‌های مختلف برای هر bar
+2. **پیشرفته:** `Visualizer` Android API رو به ExoPlayer وصل کن — نتیجه واقعی ولی پیچیده‌تر
+
+---
+
 ## چطور مشکل جدید اضافه کنیم
 
 کپی کن و پر کن:
 
 ```markdown
-## #006 — عنوان مشکل
+## #013 — عنوان مشکل
 
 - **شدت:** Critical / High / Medium / Low
 - **پیدا کرده:** [اسم]
