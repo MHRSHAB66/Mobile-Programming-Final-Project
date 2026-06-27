@@ -543,12 +543,41 @@ expose می‌کنه و `NowPlayingScreen` برچسب/آیکون offline رو ب
 
 ---
 
+## #022 — nav bar سیستم روی محتوای اپ می‌افته (چت + چند صفحه‌ی دیگه)
+
+- **شدت:** High
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Hadi (چت) + Mahyar (عمومی/MainScreen) — `hadi/data-auth-chat` / `mahyar/ui-navigation-theme`
+- **فایل‌های مرتبط:** `ui/chat/ChatDetailScreen.kt`، `ui/MainScreen.kt`، `MainActivity.kt`
+- **وضعیت:** Open
+
+**توضیح:**
+دکمه‌های سیستم گوشی (back/home و nav bar) روی محتوای اپ می‌افتن. مخصوصاً:
+1. توی چت، نوارِ ورودیِ پیام (جایی که متن می‌نویسی) زیر nav bar سیستم و زیر کیبورد می‌ره.
+2. توی چند صفحه‌ی دیگه هم nav bar سیستم روی محتوا/BottomBar می‌افته.
+
+این همون خانواده‌ی #020 ـه (که برای NowPlaying توسط Mehrdad حل شد)، ولی این صفحات مالِ Mehrdad نیستن.
+
+**ریشه:**
+- اپ edge-to-edge ـه (`enableEdgeToEdge()` در `MainActivity`).
+- **چت (Hadi):** `MessageInput` در `ChatDetailScreen` نه `navigationBarsPadding()` داره نه `imePadding()`،
+  پس زیر nav bar و کیبورد می‌ره.
+- **عمومی (Mahyar):** `Scaffold` در `MainScreen` با `contentWindowInsets = WindowInsets(0,0,0,0)` کلاً
+  inset سیستم رو خاموش کرده، برای همین BottomBar زیر nav bar سیستم می‌افته.
+
+**راه حل پیشنهادی:**
+- چت (Hadi): به `MessageInput` (یا bottomBar چت) `Modifier.navigationBarsPadding().imePadding()` اضافه بشه.
+- عمومی (Mahyar): `contentWindowInsets` پیش‌فرض بمونه (حذفِ `WindowInsets(0,0,0,0)`) یا به BottomBar/MiniPlayer
+  یه `navigationBarsPadding()` داده بشه.
+
+---
+
 ## چطور مشکل جدید اضافه کنیم
 
 کپی کن و پر کن:
 
 ```markdown
-## #022 — عنوان مشکل
+## #023 — عنوان مشکل
 
 - **شدت:** Critical / High / Medium / Low
 - **پیدا کرده:** [اسم]
