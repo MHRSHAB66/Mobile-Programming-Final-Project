@@ -321,18 +321,21 @@ Sleep timer فعلاً احتمالاً با مقادیر ثابت (۱۵/۳۰/۶
 - **شدت:** Low (زیبایی‌شناختی)
 - **پیدا کرده:** Mehrdad
 - **باید حل کنه:** Mehrdad — `mehrdad/playback-download`
-- **فایل‌های مرتبط:** `ui/nowplaying/AudioVisualizer.kt`
-- **وضعیت:** ⚠️ Partial — قشنگ‌تر شد (commit `43f0e28`) ولی هنوز به صدای واقعی واکنش نمی‌ده. منتظر تصمیم.
+- **فایل‌های مرتبط:** `ui/nowplaying/AudioVisualizer.kt`، `data/player/MusicService.kt`، `data/player/AudioSessionHolder.kt`، `ui/nowplaying/NowPlayingScreen.kt`، `AndroidManifest.xml`
+- **وضعیت:** ✅ Fixed — 2026-06-27 by Mehrdad (commit `80af7e5`؛ نسخه‌ی تزئینی قبلی `43f0e28`)
 
-**نتیجه‌ی تست (Mehrdad):**
-Visualizer قشنگ‌تر شد (سه موج bass/mid/treble)، ولی اونجوری که باید نیست: وقتی صدا بلندتر/تندتر
-یا آروم‌تر می‌شه، Visualizer فرقی نمی‌کنه — یعنی هنوز یه انیمیشن تزئینیه، نه واقعاً وصل به صدا.
+**راهی که انتخاب شد (با تأیید Mehrdad): نسخه‌ی واقعی با permission میکروفون.**
+1. `MusicService` یه audio session id صریح به ExoPlayer می‌ده و از طریق `AudioSessionHolder` (سینگلتون
+   در همون پروسه) به UI می‌رسونتش.
+2. `AudioVisualizer` وقتی session فعال + permission `RECORD_AUDIO` باشه، یه `android.media.audiofx.Visualizer`
+   به خروجیِ صدا وصل می‌کنه و bar‌ها رو از **FFT واقعی** آهنگ می‌سازه (با کمی smoothing). صدا که بلند/شلوغ
+   باشه bar‌ها بالا می‌رن، آروم که باشه پایین.
+3. اگه permission نده، خودکار به همون انیمیشن تزئینیِ سه‌موجی برمی‌گرده — اپ هیچ‌وقت کرش نمی‌کنه.
+4. `NowPlayingScreen` موقع ورود permission رو می‌گیره؛ `AndroidManifest` هم `RECORD_AUDIO` اضافه شد
+   (فقط audio session خودِ اپ رو آنالیز می‌کنه، نه میکروفون رو).
 
-**برای واقعی شدن دو راه هست (هر دو نیاز به تصمیم):**
-1. **`android.media.audiofx.Visualizer` API:** session id ExoPlayer رو می‌گیره و amplitude/FFT واقعی می‌ده.
-   ولی از Android 9 به permission `RECORD_AUDIO` نیاز داره (یه permission prompt موقع دمو — کمی اذیت‌کننده).
-2. **`TeeAudioProcessor` در ExoPlayer:** داده‌ی PCM رو tap می‌کنه و RMS amplitude حساب می‌کنه — بدون
-   permission، ولی پیاده‌سازیش پیچیده‌تره (RenderersFactory سفارشی + flow به UI).
+**نتیجه‌ی تست قبلی (Mehrdad):**
+نسخه‌ی سه‌موجی (`43f0e28`) قشنگ‌تر بود ولی به صدای واقعی واکنش نمی‌داد. این نسخه واقعاً به صدا وصله.
 
 **توضیح:**
 Visualizer فعلی یه انیمیشن ثابت است که فقط بالا و پایین می‌رود.
