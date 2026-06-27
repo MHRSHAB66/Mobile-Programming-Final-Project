@@ -86,34 +86,38 @@ private fun RealtimeVisualizer(
                                 mags[i] = sqrt(re * re + im * im)
                             }
 
-                            // Spread bars across the spectrum on a LOG scale: bass carries far more
-                            // energy than treble, so a linear split made only the left bars move.
-                            // Log spacing + sqrt compression gives every bar a live frequency band.
-                            val out = FloatArray(barCount)
+                            // Build HALF the bars from the musically-active range (skip the dead
+                            // top third of the spectrum), log-spaced + sqrt-compressed, then MIRROR
+                            // them around the centre. This keeps bass in the middle and spreads the
+                            // energy symmetrically so both sides move — not just the left.
+                            val half = (barCount + 1) / 2
+                            val band = FloatArray(half)
                             var frameMax = 1f
                             val minBin = 1.0
-                            val maxBin = bins.toDouble()
-                            for (b in 0 until barCount) {
-                                val lo = (minBin * (maxBin / minBin).pow(b.toDouble() / barCount))
+                            val maxBin = (bins * 0.66).coerceAtLeast(2.0) // ignore near-silent highs
+                            for (b in 0 until half) {
+                                val lo = (minBin * (maxBin / minBin).pow(b.toDouble() / half))
                                     .toInt().coerceIn(1, bins - 1)
-                                val hi = (minBin * (maxBin / minBin).pow((b + 1).toDouble() / barCount))
+                                val hi = (minBin * (maxBin / minBin).pow((b + 1).toDouble() / half))
                                     .toInt().coerceIn(lo + 1, bins)
                                 var sum = 0f
                                 for (k in lo until hi) sum += mags[k]
                                 val value = sqrt(sum / (hi - lo))
-                                out[b] = value
+                                band[b] = value
                                 if (value > frameMax) frameMax = value
                             }
-                            // Normalise to this frame's peak, then smooth so bars glide.
-                            for (b in 0 until barCount) {
-                                val norm = (out[b] / frameMax).coerceIn(0f, 1f)
-                                smoothed[b] = smoothed[b] * 0.55f + norm * 0.45f
+                            // Mirror around the centre + normalise + light smoothing (responsive).
+                            val center = barCount / 2
+                            for (i in 0 until barCount) {
+                                val d = abs(i - center).coerceIn(0, half - 1)
+                                val norm = (band[d] / frameMax).coerceIn(0f, 1f)
+                                smoothed[i] = smoothed[i] * 0.4f + norm * 0.6f
                             }
                             magnitudes.value = smoothed.copyOf()
                         }
                     },
-                    // Capture rate in milliHertz; half of max is a smooth ~10 Hz refresh.
-                    Visualizer.getMaxCaptureRate() / 2,
+                    // Full capture rate (milliHertz) for a snappy, low-lag refresh.
+                    Visualizer.getMaxCaptureRate(),
                     /* waveform = */ false,
                     /* fft = */ true,
                 )
