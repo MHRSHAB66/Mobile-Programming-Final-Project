@@ -10,6 +10,7 @@ import com.example.project.domain.model.Song
 import com.example.project.domain.player.PlayerController
 import com.example.project.domain.repository.ChatRepository
 import com.example.project.domain.repository.DownloadRepository
+import com.example.project.domain.repository.LibraryRepository
 import com.example.project.domain.repository.MusicRepository
 import com.example.project.domain.usecase.DownloadResult
 import com.example.project.domain.usecase.DownloadSongUseCase
@@ -45,6 +46,7 @@ class PlayerViewModel(
     private val chatRepository: ChatRepository,
     private val musicRepository: MusicRepository,
     private val downloadRepository: DownloadRepository,
+    private val libraryRepository: LibraryRepository,
 ) : ViewModel() {
 
     val playbackState: StateFlow<PlaybackState> = player.state
@@ -58,6 +60,11 @@ class PlayerViewModel(
     val downloadedIds: StateFlow<Set<String>> = downloadRepository.observeDownloadedIds()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
+    /** Ids of liked songs (live from Room). Both the in-app heart and the media-notification Like
+     *  action read this, so they stay in sync regardless of where the toggle happened (issue #002). */
+    val likedIds: StateFlow<Set<String>> = libraryRepository.observeLikedIds()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
     private val _effects = Channel<PlayerEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
@@ -66,6 +73,22 @@ class PlayerViewModel(
     private val _sleepTimerSeconds = MutableStateFlow(0)
     val sleepTimerSeconds: StateFlow<Int> = _sleepTimerSeconds.asStateFlow()
     private var sleepJob: Job? = null
+
+    init {
+        // Surface a "Download complete" message when a track actually finishes downloading — the
+        // worker runs in the background, so "Download started" alone left the user unsure. We skip
+        // the first emission (existing downloads at launch) and only react to NEW completions.
+        viewModelScope.launch {
+            var known: Set<String>? = null
+            downloadRepository.observeDownloadedIds().collect { ids ->
+                val previous = known
+                if (previous != null && (ids - previous).isNotEmpty()) {
+                    _effects.send(PlayerEffect.Message(UiText.from(R.string.download_complete)))
+                }
+                known = ids
+            }
+        }
+    }
 
     fun playSong(song: Song) = playQueue(listOf(song), 0)
 

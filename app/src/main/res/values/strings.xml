@@ -77,6 +77,7 @@
     <string name="sort_recent">Recently added</string>
     <string name="cd_swipe_delete">Swipe to delete</string>
     <string name="download_started">Download started</string>
+    <string name="download_complete">Download complete</string>
     <string name="download_removed">Removed from downloads</string>
 
     <!-- Playlists -->
