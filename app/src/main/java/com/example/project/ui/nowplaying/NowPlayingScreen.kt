@@ -44,6 +44,11 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -63,9 +68,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.project.R
 import com.example.project.core.util.asTrackTime
+import com.example.project.data.player.AudioSessionHolder
 import com.example.project.domain.model.Conversation
 import com.example.project.domain.model.RepeatMode
 import com.example.project.ui.components.CoverImage
@@ -84,8 +91,25 @@ fun NowPlayingScreen(
     val state by playerViewModel.playbackState.collectAsStateWithLifecycle()
     val sleepSeconds by playerViewModel.sleepTimerSeconds.collectAsStateWithLifecycle()
     val conversations by playerViewModel.conversations.collectAsStateWithLifecycle()
+    val audioSessionId by AudioSessionHolder.sessionId.collectAsStateWithLifecycle()
     val dimens = LocalDimens.current
     val song = state.currentSong
+
+    // RECORD_AUDIO lets the visualizer read the real playback FFT (issue #012). Ask once on entry;
+    // if denied, the visualizer just keeps its decorative animation.
+    val context = LocalContext.current
+    var hasAudioPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+                PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val audioPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> hasAudioPermission = granted }
+    LaunchedEffect(Unit) {
+        if (!hasAudioPermission) audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+    }
 
     // Auto-close Now Playing when playback fully stops (e.g. the sleep timer fired and cleared
     // the queue) so the user isn't left staring at an empty screen — issue #017.
@@ -182,6 +206,8 @@ fun NowPlayingScreen(
             AudioVisualizer(
                 isPlaying = state.isPlaying,
                 color = dominant,
+                audioSessionId = audioSessionId,
+                hasAudioPermission = hasAudioPermission,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

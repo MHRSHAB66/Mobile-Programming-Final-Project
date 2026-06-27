@@ -2,6 +2,7 @@ package com.example.project.data.player
 
 import android.app.PendingIntent
 import android.content.Intent
+import android.media.AudioManager
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
@@ -65,6 +66,13 @@ class MusicService : MediaSessionService() {
             .setLoadControl(loadControl)
             .build()
 
+        // Assign an explicit audio session id and publish it so the Now Playing visualizer can
+        // attach a real android.media.audiofx.Visualizer to this exact playback output (issue #012).
+        val audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
+        val audioSessionId = audioManager.generateAudioSessionId()
+        player.setAudioSessionId(audioSessionId)
+        AudioSessionHolder.update(audioSessionId)
+
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
         val sessionActivity = PendingIntent.getActivity(
             this, 0, launchIntent,
@@ -88,6 +96,7 @@ class MusicService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        AudioSessionHolder.update(0)
         mediaSession?.run {
             player.release()
             release()
