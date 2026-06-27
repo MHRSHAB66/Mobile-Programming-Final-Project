@@ -322,7 +322,11 @@ Sleep timer فعلاً احتمالاً با مقادیر ثابت (۱۵/۳۰/۶
 - **پیدا کرده:** Mehrdad
 - **باید حل کنه:** Mehrdad — `mehrdad/playback-download`
 - **فایل‌های مرتبط:** `ui/nowplaying/AudioVisualizer.kt`، `data/player/MusicService.kt`، `data/player/AudioSessionHolder.kt`، `ui/nowplaying/NowPlayingScreen.kt`، `AndroidManifest.xml`
-- **وضعیت:** ✅ Fixed — 2026-06-27 by Mehrdad (commit `80af7e5`؛ نسخه‌ی تزئینی قبلی `43f0e28`)
+- **وضعیت:** ✅ Fixed — 2026-06-27 by Mehrdad (نسخه‌ی واقعی `80af7e5`، بهبود full-width `a02711c`)
+
+**آپدیت تست دوم (Mehrdad):** نسخه‌ی واقعی کار کرد ولی فقط bar‌های سمت چپ (بیس) تکون می‌خوردن.
+علتش این بود که انرژیِ صدا بیشتر در فرکانس‌های پایینه و تقسیم خطی همه‌ی سهم رو می‌داد به چند bar اول.
+در commit `a02711c` باندبندی به **لگاریتمی** عوض شد + فشرده‌سازی `sqrt`، حالا کل عرض visualizer واکنش می‌ده.
 
 **راهی که انتخاب شد (با تأیید Mehrdad): نسخه‌ی واقعی با permission میکروفون.**
 1. `MusicService` یه audio session id صریح به ExoPlayer می‌ده و از طریق `AudioSessionHolder` (سینگلتون
@@ -436,12 +440,77 @@ mutationهای کاربر persist نمی‌شن (مثل #008 و #015).
 
 ---
 
+## #018 — درصد پیشرفت دانلود نمایش داده نمی‌شد
+
+- **شدت:** Low
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Mehrdad — `mehrdad/playback-download`
+- **فایل‌های مرتبط:** `ui/downloads/DownloadsScreen.kt`
+- **وضعیت:** ✅ Fixed — 2026-06-27 by Mehrdad (commit `a02711c`)
+
+**توضیح:**
+موقع دانلود فقط نوشته‌ی «Downloading…» نشون داده می‌شد، نه درصد. (طبق پلن قرار بود درصد باشه.)
+
+**کاری که شد:**
+`DownloadWorker` از قبل progress رو هر ~۵٪ توی Room آپدیت می‌کرد؛ حالا `DownloadsScreen` همون
+`item.progress` رو به‌صورت «٪۴۵» نمایش می‌ده (حالت QUEUED هنوز «Downloading…» می‌مونه).
+
+---
+
+## #019 — صفحه‌ی پخش بعد از کامل‌شدن دانلود زنده آپدیت نمی‌شه
+
+- **شدت:** Medium
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Mehrdad — `mehrdad/playback-download`
+- **فایل‌های مرتبط:** `ui/player/PlayerViewModel.kt`، `ui/nowplaying/NowPlayingScreen.kt`، `di/PresentationModule.kt`
+- **وضعیت:** ✅ Fixed — 2026-06-27 by Mehrdad (commit `a02711c`)
+
+**توضیح:**
+وقتی آهنگی که داره استریم می‌شه دانلودش تموم می‌شد، برچسب «دانلود شده / از device پخش می‌شه» در
+NowPlaying آپدیت نمی‌شد — باید یه‌بار از صفحه می‌رفتی بیرون و برمی‌گشتی.
+
+**ریشه:**
+شیءِ `Song` که داشت پخش می‌شد موقع شروع پخش گرفته شده بود و `localPath`ـش `null` بود؛ بعد از اتمام
+دانلود این شیء آپدیت نمی‌شد، پس شرطِ `song.isDownloaded` همچنان false بود.
+
+**کاری که شد:**
+`PlayerViewModel` حالا `observeDownloadedIds()` رو به‌صورت `downloadedIds: StateFlow<Set<String>>`
+expose می‌کنه و `NowPlayingScreen` برچسب/آیکون offline رو با `(song.isDownloaded || song.id in downloadedIds)`
+نشون می‌ده — لحظه‌ای که دانلود تموم بشه، زنده عوض می‌شه.
+
+---
+
+## #020 — دوربین سلفی و نوار سیستم روی محتوای صفحه‌ی پخش رو می‌گرفت
+
+- **شدت:** High
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Mehrdad — `mehrdad/playback-download`
+- **فایل‌های مرتبط:** `ui/nowplaying/NowPlayingScreen.kt`
+- **وضعیت:** ✅ Fixed — 2026-06-27 by Mehrdad (commit `a02711c`)
+
+**توضیح:**
+توی صفحه‌ی NowPlaying، نوار وضعیت / بریدگیِ دوربین سلفی (notch) بالای صفحه و دکمه‌های سیستم
+(back/home) پایین صفحه، روی محتوای اپ افتاده بودن.
+
+**ریشه:**
+اپ edge-to-edge هست و `NowPlayingScreen` فقط padding افقی داشت — هیچ inset سیستمی برای بالا/پایین
+اعمال نمی‌کرد (صفحات دیگه مثل Downloads از `statusBarsPadding` استفاده می‌کنن).
+
+**کاری که شد:**
+به Column محتوای NowPlaying یه `safeDrawingPadding()` اضافه شد که status bar + notch دوربین + نوار
+ناوبری سیستم رو در نظر می‌گیره. پس‌زمینه‌ی gradient هنوز کل صفحه رو پر می‌کنه (پشت نوارها).
+
+> **توجه:** اگه این مشکل توی صفحات دیگه هم دیده شد، اون صفحات مالِ **Mahyar** هستن (`ui/...`)
+> و باید همین `safeDrawingPadding`/`statusBarsPadding` رو اعمال کنه.
+
+---
+
 ## چطور مشکل جدید اضافه کنیم
 
 کپی کن و پر کن:
 
 ```markdown
-## #018 — عنوان مشکل
+## #021 — عنوان مشکل
 
 - **شدت:** Critical / High / Medium / Low
 - **پیدا کرده:** [اسم]
