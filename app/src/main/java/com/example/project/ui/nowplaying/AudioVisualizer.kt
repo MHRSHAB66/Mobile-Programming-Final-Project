@@ -19,6 +19,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -75,27 +76,38 @@ private fun RealtimeVisualizer(
                         override fun onFftDataCapture(v: Visualizer?, fft: ByteArray?, rate: Int) {
                             if (fft == null) return
                             val bins = fft.size / 2
-                            val perBar = (bins / barCount).coerceAtLeast(1)
-                            val out = FloatArray(barCount)
-                            var maxMag = 1f
-                            for (b in 0 until barCount) {
-                                var sum = 0f
-                                for (k in 0 until perBar) {
-                                    val idx = (b * perBar + k) * 2
-                                    if (idx + 1 < fft.size) {
-                                        val re = fft[idx].toFloat()
-                                        val im = fft[idx + 1].toFloat()
-                                        sum += sqrt(re * re + im * im)
-                                    }
-                                }
-                                val mag = sum / perBar
-                                out[b] = mag
-                                if (mag > maxMag) maxMag = mag
+                            if (bins < 2) return
+
+                            // Magnitude per FFT bin.
+                            val mags = FloatArray(bins)
+                            for (i in 0 until bins) {
+                                val re = fft[2 * i].toFloat()
+                                val im = fft[2 * i + 1].toFloat()
+                                mags[i] = sqrt(re * re + im * im)
                             }
-                            // Normalise to the current frame's peak, then smooth.
+
+                            // Spread bars across the spectrum on a LOG scale: bass carries far more
+                            // energy than treble, so a linear split made only the left bars move.
+                            // Log spacing + sqrt compression gives every bar a live frequency band.
+                            val out = FloatArray(barCount)
+                            var frameMax = 1f
+                            val minBin = 1.0
+                            val maxBin = bins.toDouble()
                             for (b in 0 until barCount) {
-                                val norm = (out[b] / maxMag).coerceIn(0f, 1f)
-                                smoothed[b] = smoothed[b] * 0.6f + norm * 0.4f
+                                val lo = (minBin * (maxBin / minBin).pow(b.toDouble() / barCount))
+                                    .toInt().coerceIn(1, bins - 1)
+                                val hi = (minBin * (maxBin / minBin).pow((b + 1).toDouble() / barCount))
+                                    .toInt().coerceIn(lo + 1, bins)
+                                var sum = 0f
+                                for (k in lo until hi) sum += mags[k]
+                                val value = sqrt(sum / (hi - lo))
+                                out[b] = value
+                                if (value > frameMax) frameMax = value
+                            }
+                            // Normalise to this frame's peak, then smooth so bars glide.
+                            for (b in 0 until barCount) {
+                                val norm = (out[b] / frameMax).coerceIn(0f, 1f)
+                                smoothed[b] = smoothed[b] * 0.55f + norm * 0.45f
                             }
                             magnitudes.value = smoothed.copyOf()
                         }

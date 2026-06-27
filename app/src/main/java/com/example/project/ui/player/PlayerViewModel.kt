@@ -9,6 +9,7 @@ import com.example.project.domain.model.PlaybackState
 import com.example.project.domain.model.Song
 import com.example.project.domain.player.PlayerController
 import com.example.project.domain.repository.ChatRepository
+import com.example.project.domain.repository.DownloadRepository
 import com.example.project.domain.repository.MusicRepository
 import com.example.project.domain.usecase.DownloadResult
 import com.example.project.domain.usecase.DownloadSongUseCase
@@ -43,6 +44,7 @@ class PlayerViewModel(
     private val downloadSong: DownloadSongUseCase,
     private val chatRepository: ChatRepository,
     private val musicRepository: MusicRepository,
+    private val downloadRepository: DownloadRepository,
 ) : ViewModel() {
 
     val playbackState: StateFlow<PlaybackState> = player.state
@@ -50,6 +52,11 @@ class PlayerViewModel(
     /** Conversations available as "share song" targets from Now Playing. */
     val conversations: StateFlow<List<Conversation>> = chatRepository.observeConversations()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Ids of songs that are fully downloaded. Lets Now Playing flip its "offline" indicator the
+     *  moment a download finishes, without leaving and re-opening the screen (issue #019). */
+    val downloadedIds: StateFlow<Set<String>> = downloadRepository.observeDownloadedIds()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
     private val _effects = Channel<PlayerEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()

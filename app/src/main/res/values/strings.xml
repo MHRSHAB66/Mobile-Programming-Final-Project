@@ -66,6 +66,7 @@
     <string name="download">Download</string>
     <string name="downloaded">Downloaded</string>
     <string name="downloading">Downloading…</string>
+    <string name="download_progress">%1$d%%</string>
     <string name="download_failed">Download failed</string>
     <string name="downloads_empty">No downloaded songs yet</string>
     <string name="premium_required_title">Premium required</string>
@@ -129,7 +130,7 @@
     <string name="now_playing_from">Playing from</string>
     <string name="player_sleep_timer">Sleep timer</string>
     <string name="player_sleep_off">Off</string>
-    <string name="player_sleep_15s">15 seconds (test)</string>
+    <string name="player_sleep_15s">15 seconds</string>
     <string name="player_sleep_15">15 minutes</string>
     <string name="player_sleep_30">30 minutes</string>
     <string name="player_sleep_60">60 minutes</string>

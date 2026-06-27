@@ -24,7 +24,7 @@ import org.koin.dsl.module
 val presentationModule = module {
     viewModel { AuthViewModel(get()) }
     viewModel { MainViewModel(get(), get()) }
-    viewModel { PlayerViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { PlayerViewModel(get(), get(), get(), get(), get(), get(), get()) }
     viewModel { HomeViewModel(get(), get()) }
     viewModel { SearchViewModel(get(), get()) }
     viewModel { DownloadsViewModel(get()) }
