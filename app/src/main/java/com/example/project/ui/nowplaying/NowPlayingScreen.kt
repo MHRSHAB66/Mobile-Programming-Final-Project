@@ -94,12 +94,16 @@ fun NowPlayingScreen(
     val conversations by playerViewModel.conversations.collectAsStateWithLifecycle()
     val audioSessionId by AudioSessionHolder.sessionId.collectAsStateWithLifecycle()
     val downloadedIds by playerViewModel.downloadedIds.collectAsStateWithLifecycle()
+    val likedIds by playerViewModel.likedIds.collectAsStateWithLifecycle()
     val dimens = LocalDimens.current
     val song = state.currentSong
 
     // True once the track is available offline — either we're already playing the local file, or
     // its download just finished while it was streaming. Drives the offline label/button live (#019).
     val isOffline = song != null && (song.isDownloaded || song.id in downloadedIds)
+
+    // Liked state read live from Room so the in-app heart and the notification Like action agree (#002).
+    val isLiked = song != null && song.id in likedIds
 
     // RECORD_AUDIO lets the visualizer read the real playback FFT (issue #012). Ask once on entry;
     // if denied, the visualizer just keeps its decorative animation.
@@ -285,7 +289,7 @@ fun NowPlayingScreen(
                     }
                 }
                 LikeButton(
-                    isLiked = song?.isLiked == true,
+                    isLiked = isLiked,
                     onToggle = { song?.let(playerViewModel::onToggleLike) },
                     iconSize = 30.dp,
                 )
