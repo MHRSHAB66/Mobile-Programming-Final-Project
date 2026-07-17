@@ -88,6 +88,7 @@ import com.example.project.ui.theme.LocalDimens
 fun NowPlayingScreen(
     playerViewModel: PlayerViewModel,
     onBack: () -> Unit,
+    animatedVisibilityScope: androidx.compose.animation.AnimatedVisibilityScope? = null,
 ) {
     val state by playerViewModel.playbackState.collectAsStateWithLifecycle()
     val sleepSeconds by playerViewModel.sleepTimerSeconds.collectAsStateWithLifecycle()
@@ -210,7 +211,10 @@ fun NowPlayingScreen(
                     isPlaying = state.isPlaying,
                     modifier = Modifier
                         .fillMaxWidth(0.72f)
-                        .aspectRatio(1f),
+                        .aspectRatio(1f)
+                        // The shared cover animates into this (non-rotating) disc container when
+                        // Now Playing is opened from the mini player — issue: shared element (§5).
+                        .playerCoverSharedBounds(animatedVisibilityScope),
                 )
             }
 

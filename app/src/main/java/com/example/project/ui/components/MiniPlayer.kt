@@ -1,5 +1,6 @@
 package com.example.project.ui.components
 
+import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,11 +27,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.project.R
 import com.example.project.domain.model.PlaybackState
+import com.example.project.ui.nowplaying.playerCoverSharedBounds
 import com.example.project.ui.theme.LocalDimens
 
 /**
  * Floating mini player shown above the bottom navigation while a track is active. Tapping the
  * body opens Now Playing; play/pause and next are inline.
+ *
+ * [animatedVisibilityScope] comes from the `AnimatedVisibility` that wraps this in `MainScreen`;
+ * combined with the shared-transition scope it animates the cover into the Now Playing disc.
  */
 @Composable
 fun MiniPlayer(
@@ -40,6 +45,7 @@ fun MiniPlayer(
     onNext: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null,
 ) {
     val song = state.currentSong ?: return
     val dimens = LocalDimens.current
@@ -65,7 +71,9 @@ fun MiniPlayer(
                 CoverImage(
                     url = song.coverImageUrl,
                     contentDescription = stringResource(R.string.cd_cover_art),
-                    modifier = Modifier.size(48.dp),
+                    modifier = Modifier
+                        .size(48.dp)
+                        .playerCoverSharedBounds(animatedVisibilityScope),
                     cornerRadius = 8,
                 )
                 Column(

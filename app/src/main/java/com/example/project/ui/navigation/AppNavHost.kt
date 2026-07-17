@@ -123,7 +123,13 @@ fun AppNavHost(
             NotificationsScreen(onBack = back)
         }
         composable(Routes.NOW_PLAYING) {
-            NowPlayingScreen(playerViewModel = playerViewModel, onBack = back)
+            // `this` is the AnimatedContentScope for this destination — it drives the shared cover
+            // transition from the mini player (spec §5).
+            NowPlayingScreen(
+                playerViewModel = playerViewModel,
+                onBack = back,
+                animatedVisibilityScope = this,
+            )
         }
         composable(Routes.LIKED) {
             LikedSongsScreen(

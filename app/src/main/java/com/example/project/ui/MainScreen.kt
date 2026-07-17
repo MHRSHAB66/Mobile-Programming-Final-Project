@@ -1,6 +1,8 @@
 package com.example.project.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Scaffold
@@ -8,6 +10,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -22,6 +25,7 @@ import com.example.project.ui.navigation.BottomBar
 import com.example.project.ui.navigation.Routes
 import com.example.project.ui.navigation.TopLevelTab
 import com.example.project.ui.navigation.mainTabRoutes
+import com.example.project.ui.nowplaying.LocalSharedTransitionScope
 import com.example.project.ui.player.PlayerEffect
 import com.example.project.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
@@ -31,6 +35,7 @@ import org.koin.androidx.compose.koinViewModel
  * Single-Activity host: bottom navigation + floating mini player on the five main tabs, a
  * shared snackbar host for one-time player effects, and the [AppNavHost] for all destinations.
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
@@ -67,42 +72,53 @@ fun MainScreen() {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val showBars = currentRoute in mainTabRoutes
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = {
-            if (showBars) {
-                Column {
-                    AnimatedVisibility(visible = playback.isActive) {
-                        MiniPlayer(
-                            state = playback,
-                            onPlayPause = playerViewModel::togglePlayPause,
-                            onPrevious = playerViewModel::previous,
-                            onNext = playerViewModel::next,
-                            onClick = { navController.navigate(Routes.NOW_PLAYING) },
-                        )
+    // SharedTransitionLayout hosts the MiniPlayer → Now Playing cover animation (spec §5). The
+    // scope is published via a CompositionLocal so the two cover composables (owned by the player
+    // feature) can opt in without threading it through every navigation signature.
+    SharedTransitionLayout {
+        CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+            Scaffold(
+                contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                snackbarHost = { SnackbarHost(snackbarHostState) },
+                bottomBar = {
+                    // The bars are always in the composition (only their visibility toggles) so the
+                    // MiniPlayer runs a real exit animation when Now Playing opens — that exit is
+                    // what the shared cover element transitions out of.
+                    Column {
+                        AnimatedVisibility(visible = showBars && playback.isActive) {
+                            MiniPlayer(
+                                state = playback,
+                                onPlayPause = playerViewModel::togglePlayPause,
+                                onPrevious = playerViewModel::previous,
+                                onNext = playerViewModel::next,
+                                onClick = { navController.navigate(Routes.NOW_PLAYING) },
+                                animatedVisibilityScope = this@AnimatedVisibility,
+                            )
+                        }
+                        AnimatedVisibility(visible = showBars) {
+                            BottomBar(
+                                currentRoute = currentRoute,
+                                onTabSelected = { tab: TopLevelTab ->
+                                    navController.navigate(tab.route) {
+                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                            )
+                        }
                     }
-                    BottomBar(
-                        currentRoute = currentRoute,
-                        onTabSelected = { tab: TopLevelTab ->
-                            navController.navigate(tab.route) {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                    )
-                }
+                },
+            ) { innerPadding ->
+                AppNavHost(
+                    navController = navController,
+                    playerViewModel = playerViewModel,
+                    avatarUrl = avatarUrl,
+                    currentSongId = playback.currentSong?.id,
+                    contentPadding = innerPadding,
+                    onShowMessage = { message -> scope.launch { snackbarHostState.showSnackbar(message) } },
+                )
             }
-        },
-    ) { innerPadding ->
-        AppNavHost(
-            navController = navController,
-            playerViewModel = playerViewModel,
-            avatarUrl = avatarUrl,
-            currentSongId = playback.currentSong?.id,
-            contentPadding = innerPadding,
-            onShowMessage = { message -> scope.launch { snackbarHostState.showSnackbar(message) } },
-        )
+        }
     }
 }
