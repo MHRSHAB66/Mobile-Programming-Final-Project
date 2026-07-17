@@ -24,3 +24,6 @@ local.properties
 *.keystore
 *.jks
 *.p12
+
+# Local Claude instructions (not for repo)
+CLAUDE.md
