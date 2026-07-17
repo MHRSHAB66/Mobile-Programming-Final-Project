@@ -43,6 +43,7 @@ import org.koin.core.component.inject
 class MusicService : MediaSessionService(), KoinComponent {
 
     private var mediaSession: MediaSession? = null
+    private var crossfadeManager: CrossfadeManager? = null
 
     // Liked-songs are the single source of truth in Room; the notification Like action and the
     // in-app heart both read/write through this, so they stay in sync (issue #002).
@@ -90,6 +91,20 @@ class MusicService : MediaSessionService(), KoinComponent {
             .setMediaSourceFactory(DefaultMediaSourceFactory(cacheDataSourceFactory))
             .setLoadControl(loadControl)
             .build()
+
+        // Overlapping crossfade (spec §6): a short-lived secondary player renders the incoming
+        // track so it can be mixed with the outgoing one's tail. The secondary must NOT grab audio
+        // focus (the main player already holds it) but shares the same disk cache + buffering.
+        crossfadeManager = CrossfadeManager(
+            mainPlayer = player,
+            secondaryPlayerFactory = {
+                ExoPlayer.Builder(this)
+                    .setAudioAttributes(audioAttributes, /* handleAudioFocus = */ false)
+                    .setMediaSourceFactory(DefaultMediaSourceFactory(cacheDataSourceFactory))
+                    .setLoadControl(loadControl)
+                    .build()
+            },
+        ).also { it.start() }
 
         // Assign an explicit audio session id and publish it so the Now Playing visualizer can
         // attach a real android.media.audiofx.Visualizer to this exact playback output (issue #012).
@@ -185,6 +200,8 @@ class MusicService : MediaSessionService(), KoinComponent {
 
     override fun onDestroy() {
         serviceScope.cancel()
+        crossfadeManager?.release()
+        crossfadeManager = null
         AudioSessionHolder.update(0)
         mediaSession?.run {
             player.release()
