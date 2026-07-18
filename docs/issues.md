@@ -572,12 +572,53 @@ expose می‌کنه و `NowPlayingScreen` برچسب/آیکون offline رو ب
 
 ---
 
+## #023 — حالت افقی (landscape) چیدمان صفحه‌ها را به‌هم می‌ریزد
+
+- **شدت:** High
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Mahyar — `mahyar/ui-navigation-theme`
+- **فایل‌های مرتبط:** `MainActivity.kt`، `AndroidManifest.xml`
+- **وضعیت:** Open
+
+**توضیح:**
+وقتی گوشی را افقی می‌کنی، چیدمان صفحه‌ها (که همه portrait طراحی شده‌اند) به‌هم می‌ریزد و نمای خوبی ندارد.
+
+**ریشه:**
+در کل پروژه هیچ `screenOrientation` / `requestedOrientation` / `configChanges` تعریف نشده (با grep تأیید شد، صفر مورد)، پس اپ آزادانه می‌چرخد ولی لِی‌اوت‌های Compose برای landscape طراحی نشده‌اند.
+
+**راه حل پیشنهادی (توصیه‌شده):**
+قفل کردن روی portrait — یا `android:screenOrientation="portrait"` روی `<activity android:name=".MainActivity">` در `AndroidManifest.xml`، یا `requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT` در `MainActivity.onCreate`. اکثر اپ‌های موزیک همین کار را می‌کنند و ساده و کافی است.
+
+> اگر تیم بخواهد landscape را واقعاً **پشتیبانی** کند (کار بزرگ‌تر)، هر مالک صفحه باید صفحه‌ی خودش را responsive کند — شامل `NowPlayingScreen` مهرداد. با ددلاین فعلی، قفل portrait منطقی‌تر است و از صفحه‌های مهرداد چیزی نمی‌خواهد.
+
+---
+
+## #024 — کاور بعضی آهنگ‌ها لود نمی‌شود (منبع picsum بی‌ثبات)
+
+- **شدت:** Medium
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Hadi (منبع داده) — `hadi/data-auth-chat` + Mahyar (fallback بصری) — `mahyar/ui-navigation-theme`
+- **فایل‌های مرتبط:** `data/mock/MockData.kt`، `ui/components/CoverImage.kt`
+- **وضعیت:** Open
+
+**توضیح:**
+کاور بعضی آهنگ‌ها (مثل «شبانه / داریوش») به‌صورت یک مربع خاکستری نمایش داده می‌شود و عکس واقعی لود نمی‌شود. این‌که کدام کاورها خاکستری بمانند بین اجراها فرق می‌کند.
+
+**ریشه:**
+همه‌ی کاورها از `https://picsum.photos/seed/...` می‌آیند (`MockData.cover()`). picsum یک CDN عکس تصادفی است که مرتب کند/rate-limit/۵۰۳ می‌شود، پس بخشی از ۵۰ کاور در هر لود fail می‌شوند و به placeholder خاکستریِ `surfaceVariant` در `CoverImage`/`CircleImage` برمی‌گردند. (لود بعضی کاورها موفق است، پس مشکل از Coil/اینترنت نیست — از بی‌ثباتیِ خودِ منبع است.)
+
+**راه حل پیشنهادی:**
+- **Hadi:** منبع کاور واقعی/پایدار — با بک‌اند واقعی/Jamendo کاور واقعیِ آلبوم بیاید (تسک اجباریِ backend همین را پوشش می‌دهد)، یا موقتاً چند تصویر کاورِ لوکال در `res/drawable` گذاشته شود تا وابسته به CDNِ بی‌ثبات نباشد.
+- **Mahyar:** در `CoverImage`/`CircleImage` به‌جای مربع خاکستریِ خالی، یک fallbackِ تمیز (آیکون نُت موسیقی روی گرادیانت، یا حرف اولِ عنوان) نمایش داده شود تا هر fail آینده هم زشت نباشد.
+
+---
+
 ## چطور مشکل جدید اضافه کنیم
 
 کپی کن و پر کن:
 
 ```markdown
-## #023 — عنوان مشکل
+## #025 — عنوان مشکل
 
 - **شدت:** Critical / High / Medium / Low
 - **پیدا کرده:** [اسم]
