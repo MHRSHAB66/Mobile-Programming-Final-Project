@@ -34,6 +34,7 @@ import com.example.project.domain.model.ThemeMode
 import com.example.project.ui.components.DetailTopBar
 import com.example.project.ui.theme.LocalDimens
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.material3.Surface
 
 @Composable
 fun SettingsScreen(
@@ -96,6 +97,7 @@ fun SettingsScreen(
                         onSelect = { viewModel.setFontSize(size) },
                     )
                 }
+                FontSizePreview()
             }
 
             SettingsGroup(stringResource(R.string.settings_account)) {
@@ -165,5 +167,38 @@ private fun OptionRow(label: String, selected: Boolean, onSelect: () -> Unit) {
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(start = dimens.spaceM),
         )
+    }
+}
+
+@Composable
+private fun FontSizePreview() {
+    val dimens = LocalDimens.current
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = dimens.spaceL,
+                vertical = dimens.spaceS,
+            ),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+    ) {
+        Column(
+            modifier = Modifier.padding(dimens.spaceM),
+        ) {
+            Text(
+                text = stringResource(R.string.settings_font_preview_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            Text(
+                text = stringResource(R.string.settings_font_preview_text),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = dimens.spaceS),
+            )
+        }
     }
 }

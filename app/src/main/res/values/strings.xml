@@ -187,4 +187,8 @@
     <string name="auth_handle_label">Username (optional)</string>
     <string name="auth_login_button">Create account / Log in</string>
     <string name="auth_demo_button">Continue as demo user</string>
+
+    <!-- Settings / Font Preview -->
+    <string name="settings_font_preview_title">Font preview</string>
+    <string name="settings_font_preview_text">Text throughout the app will appear at this size.</string>
 </resources>
