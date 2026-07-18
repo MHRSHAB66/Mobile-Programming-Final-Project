@@ -94,14 +94,16 @@ class MusicService : MediaSessionService(), KoinComponent {
 
         // Overlapping crossfade (spec §6): a short-lived secondary player renders the incoming
         // track so it can be mixed with the outgoing one's tail. The secondary must NOT grab audio
-        // focus (the main player already holds it) but shares the same disk cache + buffering.
+        // focus (the main player already holds it). It shares the disk-cache *factory* (safe — each
+        // CacheDataSource it creates is independent) but gets its OWN default LoadControl: a
+        // DefaultLoadControl owns a stateful Allocator and cannot be shared between two ExoPlayers
+        // (doing so fails with ERROR_CODE_FAILED_RUNTIME_CHECK).
         crossfadeManager = CrossfadeManager(
             mainPlayer = player,
             secondaryPlayerFactory = {
                 ExoPlayer.Builder(this)
                     .setAudioAttributes(audioAttributes, /* handleAudioFocus = */ false)
                     .setMediaSourceFactory(DefaultMediaSourceFactory(cacheDataSourceFactory))
-                    .setLoadControl(loadControl)
                     .build()
             },
         ).also { it.start() }
