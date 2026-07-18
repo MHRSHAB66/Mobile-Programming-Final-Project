@@ -65,27 +65,35 @@ fun MainScreen() {
     }
 
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-    val showBars = currentRoute in mainTabRoutes
+    val showBottomBar = currentRoute in mainTabRoutes
+
+    val showMiniPlayer =
+        playback.isActive && currentRoute != Routes.NOW_PLAYING
 
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
-            if (showBars) {
-                Column {
-                    AnimatedVisibility(visible = playback.isActive) {
-                        MiniPlayer(
-                            state = playback,
-                            onPlayPause = playerViewModel::togglePlayPause,
-                            onNext = playerViewModel::next,
-                            onClick = { navController.navigate(Routes.NOW_PLAYING) },
-                        )
-                    }
+            Column {
+                AnimatedVisibility(visible = showMiniPlayer) {
+                    MiniPlayer(
+                        state = playback,
+                        onPlayPause = playerViewModel::togglePlayPause,
+                        onNext = playerViewModel::next,
+                        onClick = {
+                            navController.navigate(Routes.NOW_PLAYING)
+                        },
+                    )
+                }
+
+                if (showBottomBar) {
                     BottomBar(
                         currentRoute = currentRoute,
                         onTabSelected = { tab: TopLevelTab ->
                             navController.navigate(tab.route) {
-                                popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
                                 launchSingleTop = true
                                 restoreState = true
                             }
