@@ -22,8 +22,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.example.project.R
 import com.example.project.domain.model.PlaybackState
@@ -50,6 +53,7 @@ fun MiniPlayer(
     val song = state.currentSong ?: return
     val dimens = LocalDimens.current
     val progress by animateFloatAsState(state.progress, label = "miniProgress")
+    val skipIconScale = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1f else 1f
 
     Surface(
         modifier = modifier
@@ -101,6 +105,7 @@ fun MiniPlayer(
                         imageVector = Icons.Filled.SkipPrevious,
                         contentDescription = stringResource(R.string.cd_previous),
                         tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.scale(scaleX = skipIconScale, scaleY = 1f),
                     )
                 }
                 IconButton(onClick = onPlayPause) {
@@ -117,6 +122,7 @@ fun MiniPlayer(
                         imageVector = Icons.Filled.SkipNext,
                         contentDescription = stringResource(R.string.cd_next),
                         tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.scale(scaleX = skipIconScale, scaleY = 1f),
                     )
                 }
             }

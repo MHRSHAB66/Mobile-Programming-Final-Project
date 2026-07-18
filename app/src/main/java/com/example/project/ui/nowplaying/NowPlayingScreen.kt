@@ -65,7 +65,9 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -305,6 +307,8 @@ fun NowPlayingScreen(
                 onSeek = playerViewModel::seekTo,
             )
 
+            val skipIconScale = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1f else 1f
+
             // Transport controls
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -327,7 +331,7 @@ fun NowPlayingScreen(
                     Icon(
                         Icons.Filled.SkipPrevious,
                         contentDescription = stringResource(R.string.cd_previous),
-                        modifier = Modifier.size(36.dp),
+                        modifier = Modifier.size(36.dp).scale(scaleX = skipIconScale, scaleY = 1f),
                     )
                 }
                 Surface(
@@ -350,7 +354,7 @@ fun NowPlayingScreen(
                     Icon(
                         Icons.Filled.SkipNext,
                         contentDescription = stringResource(R.string.cd_next),
-                        modifier = Modifier.size(36.dp),
+                        modifier = Modifier.size(36.dp).scale(scaleX = skipIconScale, scaleY = 1f),
                     )
                 }
                 // Repeat cycle: OFF → ALL → ONE → OFF
