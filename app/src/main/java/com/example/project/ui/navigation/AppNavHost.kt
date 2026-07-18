@@ -1,11 +1,15 @@
 package com.example.project.ui.navigation
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.project.domain.model.Song
 import com.example.project.ui.artist.ArtistScreen
@@ -25,6 +29,7 @@ import com.example.project.ui.profile.ProfileScreen
 import com.example.project.ui.search.SearchScreen
 import com.example.project.ui.settings.SettingsScreen
 import com.example.project.ui.userprofile.UserProfileScreen
+import androidx.compose.ui.Modifier
 
 @Composable
 fun AppNavHost(
@@ -60,7 +65,23 @@ fun AppNavHost(
     val openUser: (String) -> Unit = { navController.navigate(Routes.user(it)) }
     val back: () -> Unit = { navController.popBackStack() }
 
-    NavHost(navController = navController, startDestination = Routes.HOME) {
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+
+    val detailScreenBottomPadding =
+        if (currentRoute in mainTabRoutes) {
+            0.dp
+        } else {
+            contentPadding.calculateBottomPadding()
+        }
+
+    NavHost(
+        navController = navController,
+        startDestination = Routes.HOME,
+        modifier = Modifier.padding(
+            bottom = detailScreenBottomPadding
+        )
+    ) {
         composable(Routes.HOME) {
             HomeScreen(
                 topBar = topBar(),
