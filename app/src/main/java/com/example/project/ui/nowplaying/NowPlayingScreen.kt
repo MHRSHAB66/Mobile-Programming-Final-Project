@@ -571,16 +571,30 @@ private fun SleepTimerControl(activeSeconds: Int, onSelect: (Int) -> Unit) {
 
 @Composable
 private fun SpeedControl(speed: Float, onSelect: (Float) -> Unit) {
-    val speeds = listOf(1f, 1.5f, 2f)
-    TextButton(onClick = {
-        val next = speeds[(speeds.indexOf(speed).coerceAtLeast(0) + 1) % speeds.size]
-        onSelect(next)
-    }) {
-        Icon(Icons.Filled.Speed, contentDescription = stringResource(R.string.player_speed))
-        Text(
-            text = stringResource(R.string.player_speed_value, speed.toString().removeSuffix(".0")),
-            modifier = Modifier.padding(start = 6.dp),
-        )
+    val speeds = listOf(0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f)
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        TextButton(onClick = { expanded = true }) {
+            Icon(Icons.Filled.Speed, contentDescription = stringResource(R.string.player_speed))
+            Text(
+                text = stringResource(R.string.player_speed_value, speed.toString().removeSuffix(".0")),
+                modifier = Modifier.padding(start = 6.dp),
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            speeds.forEach { option ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            stringResource(R.string.player_speed_value, option.toString().removeSuffix(".0")),
+                            color = if (option == speed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        )
+                    },
+                    onClick = { onSelect(option); expanded = false },
+                )
+            }
+        }
     }
 }
 
