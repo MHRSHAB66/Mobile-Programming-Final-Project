@@ -1,17 +1,13 @@
 package com.example.project.domain.usecase
 
-import com.example.project.domain.repository.SettingsRepository
-import kotlinx.coroutines.delay
+import com.example.project.domain.repository.ProfileRepository
 
 /**
- * Simulated purchase/upgrade flow. A real implementation would call a billing/payment
- * backend; here we emulate a short processing delay and then persist premium = true.
+ * Premium upgrade flow. Calls `POST /me/premium/upgrade` when a backend session exists,
+ * otherwise flips premium locally (demo user).
  */
 class UpgradeToPremiumUseCase(
-    private val settingsRepository: SettingsRepository,
+    private val profileRepository: ProfileRepository,
 ) {
-    suspend operator fun invoke() {
-        delay(1500) // simulate payment processing
-        settingsRepository.setPremium(true)
-    }
+    suspend operator fun invoke(): Result<Unit> = profileRepository.upgradePremium()
 }

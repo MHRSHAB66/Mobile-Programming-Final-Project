@@ -21,6 +21,7 @@ import com.example.project.data.repository.DownloadRepositoryImpl
 import com.example.project.data.repository.LibraryRepositoryImpl
 import com.example.project.data.repository.MusicRepositoryImpl
 import com.example.project.data.repository.PlaylistRepositoryImpl
+import com.example.project.data.repository.ProfileRepositoryImpl
 import com.example.project.data.repository.SearchRepositoryImpl
 import com.example.project.data.repository.SettingsRepositoryImpl
 import com.example.project.data.repository.SocialRepositoryImpl
@@ -31,6 +32,7 @@ import com.example.project.domain.repository.DownloadRepository
 import com.example.project.domain.repository.LibraryRepository
 import com.example.project.domain.repository.MusicRepository
 import com.example.project.domain.repository.PlaylistRepository
+import com.example.project.domain.repository.ProfileRepository
 import com.example.project.domain.repository.SearchRepository
 import com.example.project.domain.repository.SettingsRepository
 import com.example.project.domain.repository.SocialRepository
@@ -92,6 +94,7 @@ val dataModule = module {
 
     single<AuthApi> { get<Retrofit>().create(AuthApi::class.java) }
     single<AuthRepository> { AuthRepositoryImpl(get(), get(), get()) }
+    single<ProfileRepository> { ProfileRepositoryImpl(androidContext(), get(), get()) }
 
     // Room database + DAOs
     single {

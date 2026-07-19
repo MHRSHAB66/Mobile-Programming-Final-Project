@@ -29,6 +29,15 @@ interface SettingsRepository {
         accessToken: String,
     )
 
+    /** Patch identity fields from `/me` (or local demo updates) without clearing the token. */
+    suspend fun updateProfileFields(
+        userId: String? = null,
+        displayName: String? = null,
+        handle: String? = null,
+        avatarUrl: String? = null,
+        isPremium: Boolean? = null,
+    )
+
     /** Restore the in-memory auth token after process start (call once at app launch). */
     suspend fun restoreAccessToken(): String?
 

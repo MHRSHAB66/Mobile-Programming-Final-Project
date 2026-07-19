@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.project.domain.model.Playlist
 import com.example.project.domain.model.User
+import com.example.project.domain.repository.ProfileRepository
 import com.example.project.domain.repository.SocialRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,6 +21,7 @@ data class UserProfileUiState(
 class UserProfileViewModel(
     private val userId: String,
     private val socialRepository: SocialRepository,
+    private val profileRepository: ProfileRepository,
 ) : ViewModel() {
 
     private val baseUser = MutableStateFlow<User?>(null)
@@ -40,8 +42,12 @@ class UserProfileViewModel(
 
     private fun load() {
         viewModelScope.launch {
-            baseUser.value = socialRepository.getUser(userId)
-            playlists.value = socialRepository.getPublicPlaylists(userId)
+            val remoteUser = profileRepository.getUser(userId).getOrNull()
+            baseUser.value = remoteUser ?: socialRepository.getUser(userId)
+
+            val remotePlaylists = profileRepository.getUserPublicPlaylists(userId).getOrNull()
+            playlists.value = remotePlaylists
+                ?: socialRepository.getPublicPlaylists(userId)
         }
     }
 

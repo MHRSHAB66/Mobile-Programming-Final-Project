@@ -97,7 +97,10 @@
     <string name="profile_messages">Messages</string>
     <string name="upgrade_in_progress">Activating Premium…</string>
     <string name="upgrade_success">Welcome to Premium! Offline downloads unlocked.</string>
+    <string name="upgrade_failed">Could not upgrade. Please try again.</string>
     <string name="avatar_changed">Avatar updated</string>
+    <string name="avatar_change_failed">Could not update avatar. Please try again.</string>
+    <string name="avatar_too_large">Image must be 5MB or smaller</string>
     <string name="followers_count">%1$s followers</string>
 
     <!-- Settings -->

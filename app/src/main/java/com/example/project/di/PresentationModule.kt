@@ -29,7 +29,7 @@ val presentationModule = module {
     viewModel { SearchViewModel(get(), get()) }
     viewModel { DownloadsViewModel(get()) }
     viewModel { PlaylistsViewModel(get()) }
-    viewModel { ProfileViewModel(get(), get(), get(), get()) }
+    viewModel { ProfileViewModel(get(), get(), get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get()) }
     viewModel { LikedSongsViewModel(get()) }
     viewModel { RecentlyPlayedViewModel(get()) }
@@ -39,6 +39,6 @@ val presentationModule = module {
     // Parameterised ViewModels (receive a route argument via parametersOf).
     viewModel { (playlistId: String) -> PlaylistDetailViewModel(playlistId, get(), get()) }
     viewModel { (artistId: String) -> ArtistViewModel(artistId, get(), get()) }
-    viewModel { (userId: String) -> UserProfileViewModel(userId, get()) }
+    viewModel { (userId: String) -> UserProfileViewModel(userId, get(), get()) }
     viewModel { (conversationId: String) -> ChatDetailViewModel(conversationId, get()) }
 }

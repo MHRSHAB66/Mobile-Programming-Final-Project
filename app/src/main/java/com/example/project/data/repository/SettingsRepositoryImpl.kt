@@ -83,6 +83,28 @@ class SettingsRepositoryImpl(
         }
     }
 
+    override suspend fun updateProfileFields(
+        userId: String?,
+        displayName: String?,
+        handle: String?,
+        avatarUrl: String?,
+        isPremium: Boolean?,
+    ) {
+        dataStore.edit { prefs ->
+            userId?.let { prefs[SettingsKeys.CURRENT_USER_ID] = it }
+            displayName?.let { prefs[SettingsKeys.USER_NAME] = it }
+            handle?.let { prefs[SettingsKeys.USER_HANDLE] = it }
+            if (avatarUrl != null) {
+                if (avatarUrl.isBlank()) {
+                    prefs.remove(SettingsKeys.USER_AVATAR)
+                } else {
+                    prefs[SettingsKeys.USER_AVATAR] = avatarUrl
+                }
+            }
+            isPremium?.let { prefs[SettingsKeys.PREMIUM] = it }
+        }
+    }
+
     override suspend fun restoreAccessToken(): String? {
         return dataStore.data.map { it[SettingsKeys.ACCESS_TOKEN] }.first()
     }
