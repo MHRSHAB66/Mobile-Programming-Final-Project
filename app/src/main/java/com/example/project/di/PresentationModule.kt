@@ -30,7 +30,7 @@ val presentationModule = module {
     viewModel { DownloadsViewModel(get()) }
     viewModel { PlaylistsViewModel(get()) }
     viewModel { ProfileViewModel(get(), get(), get(), get()) }
-    viewModel { SettingsViewModel(get()) }
+    viewModel { SettingsViewModel(get(), get()) }
     viewModel { LikedSongsViewModel(get()) }
     viewModel { RecentlyPlayedViewModel(get()) }
     viewModel { FollowedViewModel(get()) }

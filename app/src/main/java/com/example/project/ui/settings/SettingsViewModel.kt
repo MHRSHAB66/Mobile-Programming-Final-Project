@@ -6,6 +6,7 @@ import com.example.project.domain.model.AppLanguage
 import com.example.project.domain.model.FontSize
 import com.example.project.domain.model.ThemeMode
 import com.example.project.domain.model.UserSettings
+import com.example.project.domain.player.PlayerController
 import com.example.project.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,6 +15,7 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(
     private val settingsRepository: SettingsRepository,
+    private val playerController: PlayerController,
 ) : ViewModel() {
 
     val settings: StateFlow<UserSettings> = settingsRepository.settings
@@ -23,6 +25,10 @@ class SettingsViewModel(
     fun setLanguage(language: AppLanguage) = viewModelScope.launch { settingsRepository.setLanguage(language) }
     fun setFontSize(size: FontSize) = viewModelScope.launch { settingsRepository.setFontSize(size) }
 
-    // Atomic logout; the app root observes isLoggedIn and returns to the Auth screen.
-    fun logout() = viewModelScope.launch { settingsRepository.logout() }
+    fun logout() = viewModelScope.launch {
+        // Stop playback and clear the notification before clearing auth state so the user
+        // never sees music playing for a logged-out session.
+        playerController.stop()
+        settingsRepository.logout()
+    }
 }
