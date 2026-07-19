@@ -64,6 +64,13 @@ class CrossfadeManager(
             // A manual seek during the overlap invalidates the timing assumptions.
             if (fading && reason == Player.DISCONTINUITY_REASON_SEEK) abort()
         }
+
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            // When the main player pauses (audio focus loss from an incoming call, user pause, etc.)
+            // abort immediately instead of waiting for the next 100 ms ticker tick — the secondary
+            // player does not hold audio focus and would otherwise keep playing alone briefly.
+            if (!playWhenReady && fading) abort()
+        }
     }
 
     private val ticker = object : Runnable {

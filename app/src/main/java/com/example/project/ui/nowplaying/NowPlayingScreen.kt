@@ -86,7 +86,6 @@ import com.example.project.ui.components.rememberPulse
 import com.example.project.ui.player.PlayerViewModel
 import com.example.project.ui.theme.LocalDimens
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun NowPlayingScreen(
     playerViewModel: PlayerViewModel,

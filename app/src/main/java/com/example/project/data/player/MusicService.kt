@@ -4,10 +4,12 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.media.AudioManager
 import android.os.Bundle
+import androidx.core.app.ServiceCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.DefaultHttpDataSource
@@ -51,6 +53,7 @@ class MusicService : MediaSessionService(), KoinComponent {
     private val musicRepository: MusicRepository by inject()
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var likedIds: Set<String> = emptySet()
+    private var hadItems = false
 
     override fun onCreate() {
         super.onCreate()
@@ -134,7 +137,18 @@ class MusicService : MediaSessionService(), KoinComponent {
             }
         }
         player.addListener(object : Player.Listener {
-            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) = updateCustomLayout()
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                if (mediaItem != null) hadItems = true
+                updateCustomLayout()
+            }
+
+            // When the player is explicitly stopped and cleared (e.g. on logout), dismiss the
+            // foreground notification and stop the service so no stale media icon remains in
+            // the status bar. We check in both callbacks because stop() and clearMediaItems()
+            // arrive as separate events: STATE_IDLE fires before items are cleared, and
+            // onTimelineChanged fires after clearMediaItems() while state is already IDLE.
+            override fun onPlaybackStateChanged(playbackState: Int) = maybeStopService(player)
+            override fun onTimelineChanged(timeline: Timeline, reason: Int) = maybeStopService(player)
         })
         updateCustomLayout()
     }
@@ -152,6 +166,17 @@ class MusicService : MediaSessionService(), KoinComponent {
 
     private fun updateCustomLayout() {
         mediaSession?.setCustomLayout(listOf(likeButton()))
+    }
+
+    private fun maybeStopService(player: Player) {
+        if (hadItems && player.playbackState == Player.STATE_IDLE && player.mediaItemCount == 0) {
+            // Dismiss the foreground notification so no stale media icon lingers in the status bar.
+            // We intentionally do NOT call stopSelf() here: doing so triggers Android's media-button
+            // re-delivery (KEYCODE_MEDIA_PLAY via MEDIA_SESSION_CALLBACK) which immediately
+            // restarts the service as foreground, bringing the notification back. The service
+            // stays alive but silent until the process is eventually killed.
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+        }
     }
 
     /** Grants the custom Like command and handles taps on it from the notification. */

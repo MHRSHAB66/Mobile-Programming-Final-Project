@@ -6,6 +6,7 @@ import com.example.project.domain.model.AppLanguage
 import com.example.project.domain.model.FontSize
 import com.example.project.domain.model.ThemeMode
 import com.example.project.domain.model.UserSettings
+import com.example.project.domain.player.PlayerController
 import com.example.project.domain.repository.AuthRepository
 import com.example.project.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(
     private val settingsRepository: SettingsRepository,
     private val authRepository: AuthRepository,
+    private val playerController: PlayerController,
 ) : ViewModel() {
 
     val settings: StateFlow<UserSettings> = settingsRepository.settings
@@ -25,6 +27,10 @@ class SettingsViewModel(
     fun setLanguage(language: AppLanguage) = viewModelScope.launch { settingsRepository.setLanguage(language) }
     fun setFontSize(size: FontSize) = viewModelScope.launch { settingsRepository.setFontSize(size) }
 
-    // Calls backend logout (best-effort) then clears the local session.
-    fun logout() = viewModelScope.launch { authRepository.logout() }
+    fun logout() = viewModelScope.launch {
+        // Stop playback and clear the notification before the backend call so the user
+        // never sees music playing for a logged-out session.
+        playerController.stop()
+        authRepository.logout()
+    }
 }
