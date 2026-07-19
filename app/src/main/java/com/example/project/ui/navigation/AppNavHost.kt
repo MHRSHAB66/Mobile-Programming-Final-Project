@@ -1,16 +1,24 @@
 package com.example.project.ui.navigation
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.example.project.domain.model.PlaybackState
 import com.example.project.domain.model.Song
 import com.example.project.ui.artist.ArtistScreen
 import com.example.project.ui.chat.ChatDetailScreen
 import com.example.project.ui.chat.ChatListScreen
+import com.example.project.ui.components.MiniPlayer
 import com.example.project.ui.downloads.DownloadsScreen
 import com.example.project.ui.followed.FollowedScreen
 import com.example.project.ui.home.HomeScreen
@@ -32,6 +40,7 @@ fun AppNavHost(
     playerViewModel: PlayerViewModel,
     avatarUrl: String?,
     currentSongId: String?,
+    playback: PlaybackState,
     contentPadding: PaddingValues,
     onShowMessage: (String) -> Unit,
 ) {
@@ -60,7 +69,23 @@ fun AppNavHost(
     val openUser: (String) -> Unit = { navController.navigate(Routes.user(it)) }
     val back: () -> Unit = { navController.popBackStack() }
 
-    NavHost(navController = navController, startDestination = Routes.HOME) {
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = backStackEntry?.destination?.route
+
+    val detailScreenBottomPadding =
+        if (currentRoute in mainTabRoutes) {
+            0.dp
+        } else {
+            contentPadding.calculateBottomPadding()
+        }
+
+    NavHost(
+        navController = navController,
+        startDestination = Routes.HOME,
+        modifier = Modifier.padding(
+            bottom = detailScreenBottomPadding
+        )
+    ) {
         composable(Routes.HOME) {
             HomeScreen(
                 topBar = topBar(),
@@ -197,13 +222,32 @@ fun AppNavHost(
         }
         composable(
             route = Routes.CHAT_DETAIL,
-            arguments = listOf(navArgument(Routes.Args.CONVERSATION_ID) { type = NavType.StringType }),
+            arguments = listOf(
+                navArgument(Routes.Args.CONVERSATION_ID) {
+                    type = NavType.StringType
+                }
+            ),
         ) { entry ->
-            val id = entry.arguments?.getString(Routes.Args.CONVERSATION_ID).orEmpty()
+            val id = entry.arguments
+                ?.getString(Routes.Args.CONVERSATION_ID)
+                .orEmpty()
+
             ChatDetailScreen(
                 conversationId = id,
                 onBack = back,
                 onPlaySharedSong = playerViewModel::playSongById,
+                contentAboveInput = {
+                    AnimatedVisibility(visible = playback.isActive) {
+                        MiniPlayer(
+                            state = playback,
+                            onPlayPause = playerViewModel::togglePlayPause,
+                            onPrevious = playerViewModel::previous,
+                            onNext = playerViewModel::next,
+                            onClick = { navController.navigate(Routes.NOW_PLAYING) },
+                            animatedVisibilityScope = this@AnimatedVisibility,
+                        )
+                    }
+                },
             )
         }
     }

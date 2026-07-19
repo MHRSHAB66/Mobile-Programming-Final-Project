@@ -19,6 +19,28 @@ interface SettingsRepository {
     /** Simulated sign-in: stores the chosen identity and marks the session as logged in (atomic). */
     suspend fun login(name: String, handle: String, avatarUrl: String)
 
+    /** Persist a real backend session (user + JWT) atomically. */
+    suspend fun saveSession(
+        userId: String,
+        name: String,
+        handle: String,
+        avatarUrl: String,
+        isPremium: Boolean,
+        accessToken: String,
+    )
+
+    /** Patch identity fields from `/me` (or local demo updates) without clearing the token. */
+    suspend fun updateProfileFields(
+        userId: String? = null,
+        displayName: String? = null,
+        handle: String? = null,
+        avatarUrl: String? = null,
+        isPremium: Boolean? = null,
+    )
+
+    /** Restore the in-memory auth token after process start (call once at app launch). */
+    suspend fun restoreAccessToken(): String?
+
     /** Simulated sign-out: clears the identity, resets premium, and logs out (atomic). */
     suspend fun logout()
 }

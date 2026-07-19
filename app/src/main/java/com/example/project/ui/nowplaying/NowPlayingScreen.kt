@@ -214,8 +214,6 @@ fun NowPlayingScreen(
                     modifier = Modifier
                         .fillMaxWidth(0.72f)
                         .aspectRatio(1f)
-                        // The shared cover animates into this (non-rotating) disc container when
-                        // Now Playing is opened from the mini player — issue: shared element (§5).
                         .playerCoverSharedBounds(animatedVisibilityScope),
                 )
             }

@@ -5,6 +5,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -14,6 +15,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -71,6 +73,7 @@ fun MainScreen() {
 
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val showBars = currentRoute in mainTabRoutes
+    val isChatDetail = currentRoute == Routes.CHAT_DETAIL
 
     // SharedTransitionLayout hosts the MiniPlayer → Now Playing cover animation (spec §5). The
     // scope is published via a CompositionLocal so the two cover composables (owned by the player
@@ -81,10 +84,17 @@ fun MainScreen() {
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 bottomBar = {
-                    // The bars are always in the composition (only their visibility toggles) so the
-                    // MiniPlayer runs a real exit animation when Now Playing opens — that exit is
-                    // what the shared cover element transitions out of.
-                    Column {
+                    // Apply navigationBarsPadding only on screens that have no bottom bar and
+                    // no chat input (which manages its own insets). Mahyar fix: issue #022.
+                    Column(
+                        modifier = when {
+                            showBars -> Modifier
+                            isChatDetail -> Modifier
+                            else -> Modifier.navigationBarsPadding()
+                        },
+                    ) {
+                        // Always in composition so MiniPlayer runs its exit animation when Now
+                        // Playing opens — that exit is what the shared cover transitions out of.
                         AnimatedVisibility(visible = showBars && playback.isActive) {
                             MiniPlayer(
                                 state = playback,
@@ -100,7 +110,9 @@ fun MainScreen() {
                                 currentRoute = currentRoute,
                                 onTabSelected = { tab: TopLevelTab ->
                                     navController.navigate(tab.route) {
-                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                        popUpTo(navController.graph.startDestinationId) {
+                                            saveState = true
+                                        }
                                         launchSingleTop = true
                                         restoreState = true
                                     }
@@ -115,6 +127,7 @@ fun MainScreen() {
                     playerViewModel = playerViewModel,
                     avatarUrl = avatarUrl,
                     currentSongId = playback.currentSong?.id,
+                    playback = playback,
                     contentPadding = innerPadding,
                     onShowMessage = { message -> scope.launch { snackbarHostState.showSnackbar(message) } },
                 )

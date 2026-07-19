@@ -1,5 +1,8 @@
 package com.example.project.ui.profile
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +31,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,7 +67,23 @@ fun ProfileScreen(
     val dimens = LocalDimens.current
     val context = LocalContext.current
 
-    androidx.compose.runtime.LaunchedEffect(Unit) {
+    val pickAvatar = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val resolver = context.contentResolver
+        val mime = resolver.getType(uri) ?: "image/jpeg"
+        val bytes = runCatching {
+            resolver.openInputStream(uri)?.use { it.readBytes() }
+        }.getOrNull()
+        if (bytes == null) {
+            onShowMessage(context.getString(R.string.avatar_change_failed))
+        } else {
+            viewModel.onAvatarImageSelected(bytes, mime)
+        }
+    }
+
+    LaunchedEffect(Unit) {
         viewModel.effects.collect { effect ->
             when (effect) {
                 is ProfileEffect.Message -> onShowMessage(effect.text.asString(context))
@@ -99,14 +119,31 @@ fun ProfileScreen(
                     modifier = Modifier
                         .size(34.dp)
                         .clip(CircleShape)
-                        .bounceClick(onClick = viewModel::changeAvatar),
+                        .bounceClick(
+                            enabled = !state.isChangingAvatar,
+                            onClick = {
+                                pickAvatar.launch(
+                                    PickVisualMediaRequest(
+                                        ActivityResultContracts.PickVisualMedia.ImageOnly,
+                                    ),
+                                )
+                            },
+                        ),
                 ) {
-                    Icon(
-                        Icons.Filled.CameraAlt,
-                        contentDescription = stringResource(R.string.profile_change_avatar),
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.padding(7.dp),
-                    )
+                    if (state.isChangingAvatar) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.padding(7.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    } else {
+                        Icon(
+                            Icons.Filled.CameraAlt,
+                            contentDescription = stringResource(R.string.profile_change_avatar),
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.padding(7.dp),
+                        )
+                    }
                 }
             }
             Text(

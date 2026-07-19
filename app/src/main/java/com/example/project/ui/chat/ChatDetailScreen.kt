@@ -52,6 +52,7 @@ import com.example.project.ui.components.bounceClick
 import com.example.project.ui.theme.LocalDimens
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
+import androidx.compose.foundation.layout.navigationBarsPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +60,7 @@ fun ChatDetailScreen(
     conversationId: String,
     onBack: () -> Unit,
     onPlaySharedSong: (String) -> Unit,
+    contentAboveInput: (@Composable () -> Unit)? = null,
     viewModel: ChatDetailViewModel = koinViewModel(parameters = { parametersOf(conversationId) }),
 ) {
     val peer by viewModel.peer.collectAsStateWithLifecycle()
@@ -93,17 +95,25 @@ fun ChatDetailScreen(
             )
         },
         bottomBar = {
-            MessageInput(
-                value = input,
-                onValueChange = {
-                    input = it
-                    viewModel.onTyping()
-                },
-                onSend = {
-                    viewModel.send(input)
-                    input = ""
-                },
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding(),
+            ) {
+                contentAboveInput?.invoke()
+
+                MessageInput(
+                    value = input,
+                    onValueChange = {
+                        input = it
+                        viewModel.onTyping()
+                    },
+                    onSend = {
+                        viewModel.send(input)
+                        input = ""
+                    },
+                )
+            }
         },
     ) { padding ->
         LazyColumn(

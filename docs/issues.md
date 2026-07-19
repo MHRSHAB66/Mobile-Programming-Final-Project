@@ -613,12 +613,47 @@ expose می‌کنه و `NowPlayingScreen` برچسب/آیکون offline رو ب
 
 ---
 
+## #025 — آیکون‌های جلو/عقب پلیر در حالت RTL (فارسی) برعکس نمایش داده می‌شوند
+
+- **شدت:** Medium
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Mehrdad — `mehrdad/playback-download`
+- **فایل‌های مرتبط:** `ui/components/MiniPlayer.kt`، `ui/nowplaying/NowPlayingScreen.kt`
+- **وضعیت:** ✅ Fixed — 2026-07-18 by Mehrdad
+
+**توضیح:**
+وقتی زبان اپ فارسی (RTL) است، آیکون‌های ⏮ (قبلی) و ⏭ (بعدی) در MiniPlayer و صفحه‌ی Now Playing وارونه نشان داده می‌شوند. موقعیت دکمه‌ها در `Row` به‌خاطر RTL خودبه‌خود جابجا می‌شود (این درست است)، اما خودِ آیکون‌ها آینه نمی‌شوند و برای کاربر گیج‌کننده است.
+
+**ریشه:**
+Compose در layout های RTL ترتیب عناصر `Row` را معکوس می‌کند (که رفتار صحیح است)، اما `Icons.Filled.SkipPrevious` و `Icons.Filled.SkipNext` از نوع AutoMirrored نیستند و جهت فلش‌شان تغییر نمی‌کند.
+
+**راه حل:**
+در RTL، `scaleX = -1f` روی modifier هر دو آیکون SkipPrevious و SkipNext اعمال شد تا آینه شوند. از `LocalLayoutDirection` برای تشخیص RTL/LTR استفاده شد.
+
+---
+
+## #026 — کنترل سرعت پخش: اضافه کردن 1.75× و تبدیل به dropdown
+
+- **شدت:** Low
+- **پیدا کرده:** Mehrdad
+- **باید حل کنه:** Mehrdad — `mehrdad/playback-download`
+- **فایل‌های مرتبط:** `ui/nowplaying/NowPlayingScreen.kt`
+- **وضعیت:** ✅ Fixed — 2026-07-18 by Mehrdad
+
+**توضیح:**
+کنترل سرعت فقط ۳ مقدار داشت (1×، 1.5×، 2×) و با هر تپ سیکل می‌کرد — نه 1.75× داشت و نه کاربر می‌تونست مستقیم انتخاب کنه.
+
+**راه حل:**
+SpeedControl از cycle-button به DropdownMenu تبدیل شد (همان pattern SleepTimerControl). گزینه‌ها: 0.75×، 1×، 1.25×، 1.5×، 1.75×، 2×. گزینه فعال با رنگ primary هایلایت می‌شه.
+
+---
+
 ## چطور مشکل جدید اضافه کنیم
 
 کپی کن و پر کن:
 
 ```markdown
-## #025 — عنوان مشکل
+## #027 — عنوان مشکل
 
 - **شدت:** Critical / High / Medium / Low
 - **پیدا کرده:** [اسم]
@@ -629,3 +664,4 @@ expose می‌کنه و `NowPlayingScreen` برچسب/آیکون offline رو ب
 **توضیح:**
 ...
 ```
+

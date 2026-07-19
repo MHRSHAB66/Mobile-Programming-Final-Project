@@ -22,15 +22,15 @@ import org.koin.dsl.module
 
 /** Presentation layer: all ViewModels. */
 val presentationModule = module {
-    viewModel { AuthViewModel(get()) }
+    viewModel { AuthViewModel(get(), get()) }
     viewModel { MainViewModel(get(), get()) }
     viewModel { PlayerViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { HomeViewModel(get(), get()) }
     viewModel { SearchViewModel(get(), get()) }
     viewModel { DownloadsViewModel(get()) }
     viewModel { PlaylistsViewModel(get()) }
-    viewModel { ProfileViewModel(get(), get(), get(), get()) }
-    viewModel { SettingsViewModel(get(), get()) }
+    viewModel { ProfileViewModel(get(), get(), get(), get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get()) }
     viewModel { LikedSongsViewModel(get()) }
     viewModel { RecentlyPlayedViewModel(get()) }
     viewModel { FollowedViewModel(get()) }
@@ -39,6 +39,6 @@ val presentationModule = module {
     // Parameterised ViewModels (receive a route argument via parametersOf).
     viewModel { (playlistId: String) -> PlaylistDetailViewModel(playlistId, get(), get()) }
     viewModel { (artistId: String) -> ArtistViewModel(artistId, get(), get()) }
-    viewModel { (userId: String) -> UserProfileViewModel(userId, get()) }
+    viewModel { (userId: String) -> UserProfileViewModel(userId, get(), get()) }
     viewModel { (conversationId: String) -> ChatDetailViewModel(conversationId, get()) }
 }

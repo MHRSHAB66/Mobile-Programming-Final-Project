@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.project.R
 import com.example.project.core.util.UiText
+import com.example.project.data.remote.api.AuthException
 import com.example.project.domain.model.Playlist
 import com.example.project.domain.model.User
-import com.example.project.domain.repository.PlaylistRepository
+import com.example.project.domain.repository.AuthRepository
+import com.example.project.domain.repository.ProfileRepository
 import com.example.project.domain.repository.SettingsRepository
 import com.example.project.domain.repository.SocialRepository
 import com.example.project.domain.usecase.UpgradeToPremiumUseCase
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -23,6 +26,7 @@ data class ProfileUiState(
     val user: User? = null,
     val avatarUrl: String? = null,
     val isUpgrading: Boolean = false,
+    val isChangingAvatar: Boolean = false,
     val followedUsers: List<User> = emptyList(),
     val publicPlaylists: List<Playlist> = emptyList(),
 )
@@ -33,13 +37,14 @@ sealed interface ProfileEffect {
 
 class ProfileViewModel(
     private val socialRepository: SocialRepository,
-    private val playlistRepository: PlaylistRepository,
+    private val profileRepository: ProfileRepository,
     private val settingsRepository: SettingsRepository,
+    private val authRepository: AuthRepository,
     private val upgradeToPremium: UpgradeToPremiumUseCase,
 ) : ViewModel() {
 
-    private val avatarOverride = MutableStateFlow<String?>(null)
     private val isUpgrading = MutableStateFlow(false)
+    private val isChangingAvatar = MutableStateFlow(false)
     private val publicPlaylists = MutableStateFlow<List<Playlist>>(emptyList())
 
     private val _effects = Channel<ProfileEffect>(Channel.BUFFERED)
@@ -48,26 +53,32 @@ class ProfileViewModel(
     val uiState: StateFlow<ProfileUiState> = combine(
         socialRepository.observeCurrentUser(),
         socialRepository.observeFollowedUsers(),
-        avatarOverride,
         isUpgrading,
+        isChangingAvatar,
         publicPlaylists,
-    ) { user, followed, avatar, upgrading, playlists ->
+    ) { user, followed, upgrading, changingAvatar, playlists ->
         ProfileUiState(
             user = user,
-            avatarUrl = avatar ?: user.avatarUrl,
+            avatarUrl = user.avatarUrl.takeIf { it.isNotBlank() },
             isUpgrading = upgrading,
+            isChangingAvatar = changingAvatar,
             followedUsers = followed,
             publicPlaylists = playlists,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ProfileUiState())
 
     init {
-        loadPublicPlaylists()
+        viewModelScope.launch {
+            profileRepository.refreshProfile()
+            loadPublicPlaylists()
+        }
     }
 
-    private fun loadPublicPlaylists() {
-        viewModelScope.launch {
-            publicPlaylists.value = socialRepository.getPublicPlaylists("u0")
+    private suspend fun loadPublicPlaylists() {
+        val userId = settingsRepository.settings.first().currentUserId
+        val remote = profileRepository.getUserPublicPlaylists(userId)
+        publicPlaylists.value = remote.getOrElse {
+            socialRepository.getPublicPlaylists(userId)
         }
     }
 
@@ -75,24 +86,45 @@ class ProfileViewModel(
         if (isUpgrading.value) return
         viewModelScope.launch {
             isUpgrading.value = true
-            upgradeToPremium()
+            val result = upgradeToPremium()
             isUpgrading.value = false
-            _effects.send(ProfileEffect.Message(UiText.from(R.string.upgrade_success)))
+            result
+                .onSuccess {
+                    _effects.send(ProfileEffect.Message(UiText.from(R.string.upgrade_success)))
+                }
+                .onFailure { error ->
+                    val text = (error as? AuthException)?.uiText
+                        ?: UiText.from(R.string.upgrade_failed)
+                    _effects.send(ProfileEffect.Message(text))
+                }
         }
     }
 
-    fun changeAvatar() {
-        // Simulated avatar change: rotate through deterministic picsum seeds.
-        val seed = (1..999).random()
-        avatarOverride.value = "https://picsum.photos/seed/avatar$seed/400/400"
+    fun onAvatarImageSelected(bytes: ByteArray, mimeType: String) {
+        if (isChangingAvatar.value) return
         viewModelScope.launch {
-            _effects.send(ProfileEffect.Message(UiText.from(R.string.avatar_changed)))
+            isChangingAvatar.value = true
+            val result = profileRepository.uploadAvatar(bytes, mimeType)
+            isChangingAvatar.value = false
+            result
+                .onSuccess {
+                    _effects.send(ProfileEffect.Message(UiText.from(R.string.avatar_changed)))
+                }
+                .onFailure { error ->
+                    val text = when (error) {
+                        is com.example.project.data.repository.AvatarTooLargeException ->
+                            UiText.from(R.string.avatar_too_large)
+                        is AuthException -> error.uiText
+                        else -> UiText.from(R.string.avatar_change_failed)
+                    }
+                    _effects.send(ProfileEffect.Message(text))
+                }
         }
     }
 
     fun logout() {
         viewModelScope.launch {
-            settingsRepository.logout()
+            authRepository.logout()
             _effects.send(ProfileEffect.Message(UiText.from(R.string.logged_out)))
         }
     }
