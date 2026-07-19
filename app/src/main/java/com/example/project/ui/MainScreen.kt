@@ -28,6 +28,8 @@ import com.example.project.ui.player.PlayerEffect
 import com.example.project.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.ui.Modifier
 
 /**
  * Single-Activity host: bottom navigation + floating mini player on the five main tabs, a
@@ -67,19 +69,30 @@ fun MainScreen() {
         }
     }
 
-    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-    val showBottomBar = currentRoute in mainTabRoutes
+    val currentRoute =
+        navController.currentBackStackEntryAsState().value?.destination?.route
 
-    val showMiniPlayer =
-        playback.isActive && currentRoute != Routes.NOW_PLAYING
+    val showBottomBar = currentRoute in mainTabRoutes
+    val isChatDetail = currentRoute == Routes.CHAT_DETAIL
+
+    val showGlobalMiniPlayer =
+        playback.isActive &&
+                currentRoute != Routes.NOW_PLAYING &&
+                !isChatDetail
 
     SharedTransitionLayout {
         Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
-                Column {
-                    AnimatedVisibility(visible = showMiniPlayer) {
+                Column(
+                    modifier = when {
+                        showBottomBar -> Modifier
+                        isChatDetail -> Modifier
+                        else -> Modifier.navigationBarsPadding()
+                    },
+                ) {
+                    AnimatedVisibility(visible = showGlobalMiniPlayer) {
                         MiniPlayer(
                             state = playback,
                             onPlayPause = playerViewModel::togglePlayPause,
@@ -117,6 +130,7 @@ fun MainScreen() {
                 contentPadding = innerPadding,
                 onShowMessage = { message -> scope.launch { snackbarHostState.showSnackbar(message) } },
                 sharedTransitionScope = this@SharedTransitionLayout,
+                playback = playback
             )
         }
     }
