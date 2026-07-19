@@ -32,6 +32,9 @@ import com.example.project.ui.search.SearchScreen
 import com.example.project.ui.settings.SettingsScreen
 import com.example.project.ui.userprofile.UserProfileScreen
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.AnimatedVisibility
+import com.example.project.domain.model.PlaybackState
+import com.example.project.ui.components.MiniPlayer
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -40,6 +43,7 @@ fun AppNavHost(
     playerViewModel: PlayerViewModel,
     avatarUrl: String?,
     currentSongId: String?,
+    playback: PlaybackState,
     contentPadding: PaddingValues,
     onShowMessage: (String) -> Unit,
     sharedTransitionScope: SharedTransitionScope,
@@ -221,13 +225,36 @@ fun AppNavHost(
         }
         composable(
             route = Routes.CHAT_DETAIL,
-            arguments = listOf(navArgument(Routes.Args.CONVERSATION_ID) { type = NavType.StringType }),
+            arguments = listOf(
+                navArgument(Routes.Args.CONVERSATION_ID) {
+                    type = NavType.StringType
+                }
+            ),
         ) { entry ->
-            val id = entry.arguments?.getString(Routes.Args.CONVERSATION_ID).orEmpty()
+            val id = entry.arguments
+                ?.getString(Routes.Args.CONVERSATION_ID)
+                .orEmpty()
+
             ChatDetailScreen(
                 conversationId = id,
                 onBack = back,
                 onPlaySharedSong = playerViewModel::playSongById,
+                contentAboveInput = {
+                    AnimatedVisibility(
+                        visible = playback.isActive,
+                    ) {
+                        MiniPlayer(
+                            state = playback,
+                            onPlayPause = playerViewModel::togglePlayPause,
+                            onNext = playerViewModel::next,
+                            onClick = {
+                                navController.navigate(Routes.NOW_PLAYING)
+                            },
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedVisibilityScope = this@AnimatedVisibility,
+                        )
+                    }
+                },
             )
         }
     }
