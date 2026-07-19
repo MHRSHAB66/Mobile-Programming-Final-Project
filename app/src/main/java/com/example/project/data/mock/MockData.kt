@@ -152,8 +152,8 @@ object MockData {
 
     val currentUser = User(
         id = "u0",
-        displayName = "Leila",
-        handle = "@leila",
+        displayName = "Demo",
+        handle = "@demo",
         avatarUrl = cover("me"),
         isPremium = false,
         followers = 128,
