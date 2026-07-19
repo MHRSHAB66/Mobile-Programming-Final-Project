@@ -11,6 +11,7 @@ import com.example.project.domain.model.ThemeMode
 import com.example.project.domain.model.UserSettings
 import com.example.project.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 class SettingsRepositoryImpl(
@@ -63,6 +64,29 @@ class SettingsRepositoryImpl(
         }
     }
 
+    override suspend fun saveSession(
+        userId: String,
+        name: String,
+        handle: String,
+        avatarUrl: String,
+        isPremium: Boolean,
+        accessToken: String,
+    ) {
+        dataStore.edit {
+            it[SettingsKeys.LOGGED_IN] = true
+            it[SettingsKeys.CURRENT_USER_ID] = userId
+            it[SettingsKeys.USER_NAME] = name
+            it[SettingsKeys.USER_HANDLE] = handle
+            it[SettingsKeys.USER_AVATAR] = avatarUrl
+            it[SettingsKeys.PREMIUM] = isPremium
+            it[SettingsKeys.ACCESS_TOKEN] = accessToken
+        }
+    }
+
+    override suspend fun restoreAccessToken(): String? {
+        return dataStore.data.map { it[SettingsKeys.ACCESS_TOKEN] }.first()
+    }
+
     override suspend fun logout() {
         // Single atomic write so the UI never observes a half-cleared state (prevents the
         // "stuck on logout" problem). Room data is intentionally preserved.
@@ -72,6 +96,8 @@ class SettingsRepositoryImpl(
             it.remove(SettingsKeys.USER_NAME)
             it.remove(SettingsKeys.USER_HANDLE)
             it.remove(SettingsKeys.USER_AVATAR)
+            it.remove(SettingsKeys.ACCESS_TOKEN)
+            it[SettingsKeys.CURRENT_USER_ID] = LOCAL_USER_ID
         }
     }
 }

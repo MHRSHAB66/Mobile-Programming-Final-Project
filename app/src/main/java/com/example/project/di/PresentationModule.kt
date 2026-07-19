@@ -22,7 +22,7 @@ import org.koin.dsl.module
 
 /** Presentation layer: all ViewModels. */
 val presentationModule = module {
-    viewModel { AuthViewModel(get()) }
+    viewModel { AuthViewModel(get(), get()) }
     viewModel { MainViewModel(get(), get()) }
     viewModel { PlayerViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { HomeViewModel(get(), get()) }
@@ -30,7 +30,7 @@ val presentationModule = module {
     viewModel { DownloadsViewModel(get()) }
     viewModel { PlaylistsViewModel(get()) }
     viewModel { ProfileViewModel(get(), get(), get(), get()) }
-    viewModel { SettingsViewModel(get()) }
+    viewModel { SettingsViewModel(get(), get()) }
     viewModel { LikedSongsViewModel(get()) }
     viewModel { RecentlyPlayedViewModel(get()) }
     viewModel { FollowedViewModel(get()) }
