@@ -8,10 +8,10 @@ import com.example.project.data.player.PlayerControllerImpl
 import com.example.project.data.remote.api.ApiConfig
 import com.example.project.data.remote.api.AuthApi
 import com.example.project.data.remote.api.AuthInterceptor
+import com.example.project.data.remote.api.CatalogApi
 import com.example.project.data.remote.api.InMemoryTokenProvider
 import com.example.project.data.remote.api.TokenProvider
-import com.example.project.data.remote.music.JamendoMusicDataSource
-import com.example.project.data.remote.music.MockMusicDataSource
+import com.example.project.data.remote.music.MelodifyCatalogDataSource
 import com.example.project.data.remote.music.RemoteMusicDataSource
 import com.example.project.data.remote.socket.ChatSocket
 import com.example.project.data.remote.socket.FakeChatSocket
@@ -52,14 +52,11 @@ import java.util.concurrent.TimeUnit
 /** Provides DataStore, Room, networking, the realtime socket, the player and all repositories. */
 val dataModule = module {
 
-    // Application-scoped coroutine scope for realtime/socket work.
     single<CoroutineScope> { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
 
-    // DataStore + settings
     single { androidContext().settingsDataStore }
     single<SettingsRepository> { SettingsRepositoryImpl(get()) }
 
-    // Auth token (in-memory; restored from DataStore at app start)
     single<TokenProvider> { InMemoryTokenProvider() }
 
     single {
@@ -93,10 +90,10 @@ val dataModule = module {
     }
 
     single<AuthApi> { get<Retrofit>().create(AuthApi::class.java) }
+    single<CatalogApi> { get<Retrofit>().create(CatalogApi::class.java) }
     single<AuthRepository> { AuthRepositoryImpl(get(), get(), get()) }
     single<ProfileRepository> { ProfileRepositoryImpl(androidContext(), get(), get()) }
 
-    // Room database + DAOs
     single {
         Room.databaseBuilder(androidContext(), AppDatabase::class.java, AppDatabase.NAME)
             .fallbackToDestructiveMigration(dropAllTables = true)
@@ -108,24 +105,15 @@ val dataModule = module {
     single { get<AppDatabase>().searchHistoryDao() }
     single { get<AppDatabase>().chatMessageDao() }
 
-    // Music catalogue source: Jamendo (real Creative-Commons music) when a client id is
-    // configured, otherwise the in-memory mock source with stable royalty-free audio.
-    single<RemoteMusicDataSource> {
-        val clientId = BuildConfig.JAMENDO_CLIENT_ID
-        if (clientId.isNotBlank()) JamendoMusicDataSource(clientId) else MockMusicDataSource()
-    }
+    single<RemoteMusicDataSource> { MelodifyCatalogDataSource(get()) }
 
-    // Realtime chat transport (fake WebSocket today; swap for OkHttp later)
     single<ChatSocket> { FakeChatSocket(get()) }
-
-    // Player
     single<PlayerController> { PlayerControllerImpl(androidContext()) }
 
-    // Repositories
     single<MusicRepository> { MusicRepositoryImpl(get(), get(), get()) }
     single<LibraryRepository> { LibraryRepositoryImpl(get(), get()) }
-    single<PlaylistRepository> { PlaylistRepositoryImpl(get()) }
-    single<SearchRepository> { SearchRepositoryImpl(get(), get()) }
+    single<PlaylistRepository> { PlaylistRepositoryImpl(get(), get()) }
+    single<SearchRepository> { SearchRepositoryImpl(get(), get(), get()) }
     single<SocialRepository> { SocialRepositoryImpl(get()) }
     single<DownloadRepository> { DownloadRepositoryImpl(androidContext(), get(), get()) }
     single<ChatRepository> { ChatRepositoryImpl(get(), get(), get()) }

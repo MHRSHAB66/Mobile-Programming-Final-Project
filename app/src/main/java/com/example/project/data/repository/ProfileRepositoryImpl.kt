@@ -117,10 +117,7 @@ class ProfileRepositoryImpl(
 
     private fun rewriteMediaUrl(url: String?): String? {
         if (url.isNullOrBlank()) return url
-        val apiBase = ApiConfig.BASE_URL.trimEnd('/')
-        return url
-            .replace("http://127.0.0.1:8000", apiBase)
-            .replace("http://localhost:8000", apiBase)
+        return ApiConfig.rewriteUrl(url)
     }
 
     private fun normalizeMime(mimeType: String): String {

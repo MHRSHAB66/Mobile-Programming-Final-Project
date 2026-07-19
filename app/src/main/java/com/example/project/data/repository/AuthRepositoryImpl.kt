@@ -1,6 +1,7 @@
 package com.example.project.data.repository
 
 import com.example.project.data.remote.api.AuthApi
+import com.example.project.data.remote.api.ApiConfig
 import com.example.project.data.remote.api.TokenProvider
 import com.example.project.data.remote.api.dto.LoginRequestDto
 import com.example.project.data.remote.api.dto.RegisterRequestDto
@@ -62,7 +63,7 @@ class AuthRepositoryImpl(
             userId = user.id,
             name = user.displayName,
             handle = "@${user.handle.removePrefix("@")}",
-            avatarUrl = user.avatarUrl.orEmpty(),
+            avatarUrl = ApiConfig.rewriteUrl(user.avatarUrl),
             isPremium = user.isPremium,
             accessToken = response.accessToken,
         )
