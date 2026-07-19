@@ -32,7 +32,8 @@ class SocialRepositoryImpl(
                 id = settings.currentUserId,
                 displayName = settings.displayName ?: MockData.currentUser.displayName,
                 handle = settings.handle ?: MockData.currentUser.handle,
-                avatarUrl = settings.avatarUrl ?: MockData.currentUser.avatarUrl,
+                avatarUrl = settings.avatarUrl?.takeIf { it.isNotBlank() }
+                    ?: MockData.currentUser.avatarUrl,
                 isPremium = settings.isPremium,
             )
         }

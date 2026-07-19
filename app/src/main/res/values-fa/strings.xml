@@ -97,7 +97,10 @@
     <string name="profile_messages">پیام‌ها</string>
     <string name="upgrade_in_progress">در حال فعال‌سازی اشتراک ویژه…</string>
     <string name="upgrade_success">به اشتراک ویژه خوش آمدید! دانلود آفلاین فعال شد.</string>
+    <string name="upgrade_failed">ارتقا انجام نشد. دوباره تلاش کنید.</string>
     <string name="avatar_changed">آواتار به‌روزرسانی شد</string>
+    <string name="avatar_change_failed">به‌روزرسانی آواتار انجام نشد. دوباره تلاش کنید.</string>
+    <string name="avatar_too_large">حجم تصویر باید حداکثر ۵ مگابایت باشد</string>
     <string name="followers_count">%1$s دنبال‌کننده</string>
 
     <!-- Settings -->
@@ -184,9 +187,21 @@
     <!-- Auth / login -->
     <string name="auth_tagline">موسیقی و دوستانت، همه در یکجا</string>
     <string name="auth_name_label">نام شما</string>
-    <string name="auth_handle_label">نام کاربری (اختیاری)</string>
-    <string name="auth_login_button">ساخت حساب / ورود</string>
+    <string name="auth_handle_label">نام کاربری</string>
+    <string name="auth_password_label">رمز عبور</string>
+    <string name="auth_mode_login">ورود</string>
+    <string name="auth_mode_register">ساخت حساب</string>
+    <string name="auth_login_button">ورود</string>
+    <string name="auth_register_button">ساخت حساب</string>
     <string name="auth_demo_button">ادامه به‌عنوان کاربر نمونه</string>
+    <string name="auth_error_empty_name">لطفاً نام خود را وارد کنید</string>
+    <string name="auth_error_empty_handle">لطفاً نام کاربری را وارد کنید</string>
+    <string name="auth_error_password_short">رمز عبور باید حداقل ۶ کاراکتر باشد</string>
+    <string name="auth_error_invalid_credentials">نام کاربری یا رمز عبور نادرست است</string>
+    <string name="auth_error_handle_taken">این نام کاربری قبلاً گرفته شده است</string>
+    <string name="auth_error_network">اتصال به سرور برقرار نشد. اینترنت را بررسی کنید.</string>
+    <string name="auth_error_validation">فرم را بررسی کنید و دوباره تلاش کنید</string>
+    <string name="auth_error_unknown">مشکلی پیش آمد. دوباره تلاش کنید.</string>
 
     <!-- Settings / Font Preview -->
     <string name="settings_font_preview_title">پیش‌نمایش فونت</string>

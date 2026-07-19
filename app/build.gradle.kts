@@ -28,6 +28,11 @@ android {
         // load real Creative-Commons music; empty falls back to the stable mock catalogue.
         val jamendoClientId = (project.findProperty("jamendoClientId") as String?) ?: ""
         buildConfigField("String", "JAMENDO_CLIENT_ID", "\"$jamendoClientId\"")
+
+        // Single override for the Melodify API base URL (falls back to ApiConfig.BASE_URL).
+        // Change gradle.properties key apiBaseUrl, or leave empty and edit ApiConfig.kt.
+        val apiBaseUrl = (project.findProperty("apiBaseUrl") as String?) ?: ""
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
 
     buildTypes {
@@ -104,6 +109,14 @@ dependencies {
 
     // Palette (dynamic gradient from cover art)
     implementation(libs.androidx.palette.ktx)
+
+    // Networking (auth + future Melodify backend APIs)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.moshi)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
 
     // Test
     testImplementation(libs.junit)

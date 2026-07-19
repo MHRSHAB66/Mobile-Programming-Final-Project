@@ -22,4 +22,5 @@ object SettingsKeys {
     val USER_NAME = stringPreferencesKey("user_name")
     val USER_HANDLE = stringPreferencesKey("user_handle")
     val USER_AVATAR = stringPreferencesKey("user_avatar")
+    val ACCESS_TOKEN = stringPreferencesKey("access_token")
 }

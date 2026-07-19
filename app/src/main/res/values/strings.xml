@@ -97,7 +97,10 @@
     <string name="profile_messages">Messages</string>
     <string name="upgrade_in_progress">Activating Premium…</string>
     <string name="upgrade_success">Welcome to Premium! Offline downloads unlocked.</string>
+    <string name="upgrade_failed">Could not upgrade. Please try again.</string>
     <string name="avatar_changed">Avatar updated</string>
+    <string name="avatar_change_failed">Could not update avatar. Please try again.</string>
+    <string name="avatar_too_large">Image must be 5MB or smaller</string>
     <string name="followers_count">%1$s followers</string>
 
     <!-- Settings -->
@@ -184,9 +187,21 @@
     <!-- Auth / login -->
     <string name="auth_tagline">Your music and friends, in one place</string>
     <string name="auth_name_label">Your name</string>
-    <string name="auth_handle_label">Username (optional)</string>
-    <string name="auth_login_button">Create account / Log in</string>
+    <string name="auth_handle_label">Username</string>
+    <string name="auth_password_label">Password</string>
+    <string name="auth_mode_login">Log in</string>
+    <string name="auth_mode_register">Create account</string>
+    <string name="auth_login_button">Log in</string>
+    <string name="auth_register_button">Create account</string>
     <string name="auth_demo_button">Continue as demo user</string>
+    <string name="auth_error_empty_name">Please enter your name</string>
+    <string name="auth_error_empty_handle">Please enter a username</string>
+    <string name="auth_error_password_short">Password must be at least 6 characters</string>
+    <string name="auth_error_invalid_credentials">Invalid username or password</string>
+    <string name="auth_error_handle_taken">That username is already taken</string>
+    <string name="auth_error_network">Cannot reach the server. Check your connection.</string>
+    <string name="auth_error_validation">Please check the form and try again</string>
+    <string name="auth_error_unknown">Something went wrong. Please try again.</string>
 
     <!-- Settings / Font Preview -->
     <string name="settings_font_preview_title">Font preview</string>
