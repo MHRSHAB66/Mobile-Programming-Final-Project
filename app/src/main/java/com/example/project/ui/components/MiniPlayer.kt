@@ -1,5 +1,8 @@
 package com.example.project.ui.components
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,12 +34,15 @@ import com.example.project.ui.theme.LocalDimens
  * Floating mini player shown above the bottom navigation while a track is active. Tapping the
  * body opens Now Playing; play/pause and next are inline.
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MiniPlayer(
     state: PlaybackState,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
     onClick: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
 ) {
     val song = state.currentSong ?: return
@@ -60,12 +66,21 @@ fun MiniPlayer(
                     .padding(dimens.spaceS),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                CoverImage(
-                    url = song.coverImageUrl,
-                    contentDescription = stringResource(R.string.cd_cover_art),
-                    modifier = Modifier.size(48.dp),
-                    cornerRadius = 8,
-                )
+                with(sharedTransitionScope) {
+                    CoverImage(
+                        url = song.coverImageUrl,
+                        contentDescription = stringResource(R.string.cd_cover_art),
+                        modifier = Modifier
+                            .sharedElement(
+                                state = rememberSharedContentState(
+                                    key = "player-cover-${song.id}",
+                                ),
+                                animatedVisibilityScope = animatedVisibilityScope,
+                            )
+                            .size(48.dp),
+                        cornerRadius = 8,
+                    )
+                }
                 Column(
                     modifier = Modifier
                         .weight(1f)

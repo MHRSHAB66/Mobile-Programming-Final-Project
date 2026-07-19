@@ -1,6 +1,8 @@
 package com.example.project.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Scaffold
@@ -31,6 +33,7 @@ import org.koin.androidx.compose.koinViewModel
  * Single-Activity host: bottom navigation + floating mini player on the five main tabs, a
  * shared snackbar host for one-time player effects, and the [AppNavHost] for all destinations.
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
@@ -70,46 +73,51 @@ fun MainScreen() {
     val showMiniPlayer =
         playback.isActive && currentRoute != Routes.NOW_PLAYING
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        bottomBar = {
-            Column {
-                AnimatedVisibility(visible = showMiniPlayer) {
-                    MiniPlayer(
-                        state = playback,
-                        onPlayPause = playerViewModel::togglePlayPause,
-                        onNext = playerViewModel::next,
-                        onClick = {
-                            navController.navigate(Routes.NOW_PLAYING)
-                        },
-                    )
-                }
+    SharedTransitionLayout {
+        Scaffold(
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            bottomBar = {
+                Column {
+                    AnimatedVisibility(visible = showMiniPlayer) {
+                        MiniPlayer(
+                            state = playback,
+                            onPlayPause = playerViewModel::togglePlayPause,
+                            onNext = playerViewModel::next,
+                            onClick = {
+                                navController.navigate(Routes.NOW_PLAYING)
+                            },
+                            sharedTransitionScope = this@SharedTransitionLayout,
+                            animatedVisibilityScope = this@AnimatedVisibility,
+                        )
+                    }
 
-                if (showBottomBar) {
-                    BottomBar(
-                        currentRoute = currentRoute,
-                        onTabSelected = { tab: TopLevelTab ->
-                            navController.navigate(tab.route) {
-                                popUpTo(navController.graph.startDestinationId) {
-                                    saveState = true
+                    if (showBottomBar) {
+                        BottomBar(
+                            currentRoute = currentRoute,
+                            onTabSelected = { tab: TopLevelTab ->
+                                navController.navigate(tab.route) {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                    )
+                            },
+                        )
+                    }
                 }
-            }
-        },
-    ) { innerPadding ->
-        AppNavHost(
-            navController = navController,
-            playerViewModel = playerViewModel,
-            avatarUrl = avatarUrl,
-            currentSongId = playback.currentSong?.id,
-            contentPadding = innerPadding,
-            onShowMessage = { message -> scope.launch { snackbarHostState.showSnackbar(message) } },
-        )
+            },
+        ) { innerPadding ->
+            AppNavHost(
+                navController = navController,
+                playerViewModel = playerViewModel,
+                avatarUrl = avatarUrl,
+                currentSongId = playback.currentSong?.id,
+                contentPadding = innerPadding,
+                onShowMessage = { message -> scope.launch { snackbarHostState.showSnackbar(message) } },
+                sharedTransitionScope = this@SharedTransitionLayout,
+            )
+        }
     }
 }

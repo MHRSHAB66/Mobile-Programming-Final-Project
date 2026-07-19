@@ -1,5 +1,7 @@
 package com.example.project.ui.navigation
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -31,6 +33,7 @@ import com.example.project.ui.settings.SettingsScreen
 import com.example.project.ui.userprofile.UserProfileScreen
 import androidx.compose.ui.Modifier
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppNavHost(
     navController: NavHostController,
@@ -39,6 +42,7 @@ fun AppNavHost(
     currentSongId: String?,
     contentPadding: PaddingValues,
     onShowMessage: (String) -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
 ) {
     val onPlaySong: (List<Song>, Int) -> Unit = { list, index -> playerViewModel.playQueue(list, index) }
     val onPlayAll: (List<Song>) -> Unit = { playerViewModel.playQueue(it, 0) }
@@ -144,7 +148,12 @@ fun AppNavHost(
             NotificationsScreen(onBack = back)
         }
         composable(Routes.NOW_PLAYING) {
-            NowPlayingScreen(playerViewModel = playerViewModel, onBack = back)
+            NowPlayingScreen(
+                playerViewModel = playerViewModel,
+                onBack = back,
+                sharedTransitionScope = sharedTransitionScope,
+                animatedVisibilityScope = this@composable,
+            )
         }
         composable(Routes.LIKED) {
             LikedSongsScreen(

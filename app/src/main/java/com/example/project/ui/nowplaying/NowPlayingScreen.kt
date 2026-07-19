@@ -1,5 +1,8 @@
 package com.example.project.ui.nowplaying
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -67,10 +70,13 @@ import com.example.project.ui.components.rememberPulse
 import com.example.project.ui.player.PlayerViewModel
 import com.example.project.ui.theme.LocalDimens
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun NowPlayingScreen(
     playerViewModel: PlayerViewModel,
     onBack: () -> Unit,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
     val state by playerViewModel.playbackState.collectAsStateWithLifecycle()
     val sleepMinutes by playerViewModel.sleepTimerMinutes.collectAsStateWithLifecycle()
@@ -149,8 +155,11 @@ fun NowPlayingScreen(
                     )
                 }
                 RotatingDisc(
+                    songId = song?.id,
                     coverUrl = song?.coverImageUrl,
                     isPlaying = state.isPlaying,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedVisibilityScope = animatedVisibilityScope,
                     modifier = Modifier
                         .fillMaxWidth(0.72f)
                         .aspectRatio(1f),
@@ -285,8 +294,16 @@ fun NowPlayingScreen(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-private fun RotatingDisc(coverUrl: String?, isPlaying: Boolean, modifier: Modifier = Modifier) {
+private fun RotatingDisc(
+    songId: String?,
+    coverUrl: String?,
+    isPlaying: Boolean,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    modifier: Modifier = Modifier,
+) {
     val rotation = remember { Animatable(0f) }
     LaunchedEffect(isPlaying) {
         if (isPlaying) {
@@ -308,10 +325,23 @@ private fun RotatingDisc(coverUrl: String?, isPlaying: Boolean, modifier: Modifi
                 .rotate(rotation.value),
             contentAlignment = Alignment.Center,
         ) {
+            val coverModifier = if (songId != null) {
+                with(sharedTransitionScope) {
+                    Modifier.sharedElement(
+                        state = rememberSharedContentState(
+                            key = "player-cover-$songId",
+                        ),
+                        animatedVisibilityScope = animatedVisibilityScope,
+                    )
+                }
+            } else {
+                Modifier
+            }
+
             CoverImage(
                 url = coverUrl,
                 contentDescription = stringResource(R.string.cd_cover_art),
-                modifier = Modifier
+                modifier = coverModifier
                     .fillMaxSize(0.92f)
                     .clip(CircleShape),
                 cornerRadius = 0,
