@@ -4,8 +4,12 @@ package com.example.project.domain.model
  * A single, verified, highly-available sample MP3 (Google-hosted ExoPlayer test media) used as
  * a safe fallback for every song. If a primary [Song.audioUrl] fails to load, the player retries
  * with this URL before skipping — so a track is always playable during the demo.
+ *
+ * NOTE: this is the instrumental "Jazz in Paris" clip, NOT the old `play.mp3` (which was a spoken
+ * voice clip about Google Play). When a stream fails over to the fallback it now plays quiet music
+ * instead of a talking voice, which is far less jarring during a demo.
  */
-const val DEFAULT_FALLBACK_AUDIO_URL = "https://storage.googleapis.com/exoplayer-test-media-0/play.mp3"
+const val DEFAULT_FALLBACK_AUDIO_URL = "https://storage.googleapis.com/exoplayer-test-media-0/Jazz_In_Paris.mp3"
 
 /**
  * Core music item. Mirrors the required metadata (id, title, artist_name,

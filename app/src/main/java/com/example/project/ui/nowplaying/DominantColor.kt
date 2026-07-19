@@ -51,3 +51,48 @@ fun rememberDominantColor(url: String?, fallback: Color): State<Color> {
     }
     return colorState
 }
+
+/**
+ * Extracts ALL prominent colours from the album art (vibrant, muted, dark vibrant, light muted)
+ * so the Now Playing background can animate between them as a living multi-colour gradient.
+ * Returns at least two colours so the gradient always has something to animate between.
+ */
+@Composable
+fun rememberAlbumColors(url: String?, fallback: Color): State<List<Color>> {
+    val context = LocalContext.current
+    val colorsState = remember(url) { mutableStateOf(listOf(fallback, fallback)) }
+
+    LaunchedEffect(url, fallback) {
+        if (url.isNullOrBlank()) {
+            colorsState.value = listOf(fallback, fallback)
+            return@LaunchedEffect
+        }
+        val extracted = withContext(Dispatchers.IO) {
+            runCatching {
+                val request = ImageRequest.Builder(context)
+                    .data(url)
+                    .allowHardware(false)
+                    .size(128)
+                    .build()
+                val result = context.imageLoader.execute(request)
+                val bitmap = (result as? SuccessResult)?.drawable as? BitmapDrawable
+                bitmap?.bitmap?.let { bmp ->
+                    val palette = Palette.from(bmp).generate()
+                    listOfNotNull(
+                        palette.vibrantSwatch?.rgb,
+                        palette.lightVibrantSwatch?.rgb,
+                        palette.darkVibrantSwatch?.rgb,
+                        palette.mutedSwatch?.rgb,
+                        palette.lightMutedSwatch?.rgb,
+                        palette.darkMutedSwatch?.rgb,
+                    ).map { Color(it) }
+                }
+            }.getOrNull()
+        }
+        if (!extracted.isNullOrEmpty()) {
+            // Always provide at least 2 colours for the gradient animator.
+            colorsState.value = if (extracted.size >= 2) extracted else extracted + extracted
+        }
+    }
+    return colorsState
+}

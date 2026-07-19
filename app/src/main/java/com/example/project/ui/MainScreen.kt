@@ -5,14 +5,17 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -24,12 +27,11 @@ import com.example.project.ui.navigation.BottomBar
 import com.example.project.ui.navigation.Routes
 import com.example.project.ui.navigation.TopLevelTab
 import com.example.project.ui.navigation.mainTabRoutes
+import com.example.project.ui.nowplaying.LocalSharedTransitionScope
 import com.example.project.ui.player.PlayerEffect
 import com.example.project.ui.player.PlayerViewModel
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.ui.Modifier
 
 /**
  * Single-Activity host: bottom navigation + floating mini player on the five main tabs, a
@@ -69,69 +71,67 @@ fun MainScreen() {
         }
     }
 
-    val currentRoute =
-        navController.currentBackStackEntryAsState().value?.destination?.route
-
-    val showBottomBar = currentRoute in mainTabRoutes
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    val showBars = currentRoute in mainTabRoutes
     val isChatDetail = currentRoute == Routes.CHAT_DETAIL
 
-    val showGlobalMiniPlayer =
-        playback.isActive &&
-                currentRoute != Routes.NOW_PLAYING &&
-                !isChatDetail
-
+    // SharedTransitionLayout hosts the MiniPlayer → Now Playing cover animation (spec §5). The
+    // scope is published via a CompositionLocal so the two cover composables (owned by the player
+    // feature) can opt in without threading it through every navigation signature.
     SharedTransitionLayout {
-        Scaffold(
-            contentWindowInsets = WindowInsets(0, 0, 0, 0),
-            snackbarHost = { SnackbarHost(snackbarHostState) },
-            bottomBar = {
-                Column(
-                    modifier = when {
-                        showBottomBar -> Modifier
-                        isChatDetail -> Modifier
-                        else -> Modifier.navigationBarsPadding()
-                    },
-                ) {
-                    AnimatedVisibility(visible = showGlobalMiniPlayer) {
-                        MiniPlayer(
-                            state = playback,
-                            onPlayPause = playerViewModel::togglePlayPause,
-                            onNext = playerViewModel::next,
-                            onClick = {
-                                navController.navigate(Routes.NOW_PLAYING)
-                            },
-                            sharedTransitionScope = this@SharedTransitionLayout,
-                            animatedVisibilityScope = this@AnimatedVisibility,
-                        )
-                    }
-
-                    if (showBottomBar) {
-                        BottomBar(
-                            currentRoute = currentRoute,
-                            onTabSelected = { tab: TopLevelTab ->
-                                navController.navigate(tab.route) {
-                                    popUpTo(navController.graph.startDestinationId) {
-                                        saveState = true
+        CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+            Scaffold(
+                contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                snackbarHost = { SnackbarHost(snackbarHostState) },
+                bottomBar = {
+                    // Apply navigationBarsPadding only on screens that have no bottom bar and
+                    // no chat input (which manages its own insets). Mahyar fix: issue #022.
+                    Column(
+                        modifier = when {
+                            showBars -> Modifier
+                            isChatDetail -> Modifier
+                            else -> Modifier.navigationBarsPadding()
+                        },
+                    ) {
+                        // Always in composition so MiniPlayer runs its exit animation when Now
+                        // Playing opens — that exit is what the shared cover transitions out of.
+                        AnimatedVisibility(visible = showBars && playback.isActive) {
+                            MiniPlayer(
+                                state = playback,
+                                onPlayPause = playerViewModel::togglePlayPause,
+                                onPrevious = playerViewModel::previous,
+                                onNext = playerViewModel::next,
+                                onClick = { navController.navigate(Routes.NOW_PLAYING) },
+                                animatedVisibilityScope = this@AnimatedVisibility,
+                            )
+                        }
+                        AnimatedVisibility(visible = showBars) {
+                            BottomBar(
+                                currentRoute = currentRoute,
+                                onTabSelected = { tab: TopLevelTab ->
+                                    navController.navigate(tab.route) {
+                                        popUpTo(navController.graph.startDestinationId) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                        )
+                                },
+                            )
+                        }
                     }
-                }
-            },
-        ) { innerPadding ->
-            AppNavHost(
-                navController = navController,
-                playerViewModel = playerViewModel,
-                avatarUrl = avatarUrl,
-                currentSongId = playback.currentSong?.id,
-                contentPadding = innerPadding,
-                onShowMessage = { message -> scope.launch { snackbarHostState.showSnackbar(message) } },
-                sharedTransitionScope = this@SharedTransitionLayout,
-                playback = playback
-            )
+                },
+            ) { innerPadding ->
+                AppNavHost(
+                    navController = navController,
+                    playerViewModel = playerViewModel,
+                    avatarUrl = avatarUrl,
+                    currentSongId = playback.currentSong?.id,
+                    playback = playback,
+                    contentPadding = innerPadding,
+                    onShowMessage = { message -> scope.launch { snackbarHostState.showSnackbar(message) } },
+                )
+            }
         }
     }
 }

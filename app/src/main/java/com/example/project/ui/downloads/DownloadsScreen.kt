@@ -148,7 +148,18 @@ private fun SwipeableDownloadRow(
             onClick = onClick,
             modifier = Modifier.background(MaterialTheme.colorScheme.background),
             trailing = {
-                DownloadStatusIcon(item)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    DownloadStatusIcon(item)
+                    // Explicit delete button so removing a download doesn't rely on the
+                    // (easy-to-miss, RTL-flipped) swipe gesture — issue #013.
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            Icons.Filled.Delete,
+                            contentDescription = stringResource(R.string.delete),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             },
         )
     }
@@ -162,7 +173,13 @@ private fun DownloadStatusIcon(item: DownloadItem) {
             contentDescription = stringResource(R.string.downloaded),
             tint = MaterialTheme.colorScheme.primary,
         )
-        DownloadState.DOWNLOADING, DownloadState.QUEUED -> Text(
+        DownloadState.DOWNLOADING -> Text(
+            // Live percentage from DownloadWorker (updated in Room every ~5%) — issue #018.
+            text = stringResource(R.string.download_progress, item.progress),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        DownloadState.QUEUED -> Text(
             text = stringResource(R.string.downloading),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

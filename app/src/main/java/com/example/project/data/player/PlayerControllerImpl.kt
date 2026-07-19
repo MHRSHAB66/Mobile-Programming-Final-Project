@@ -7,10 +7,12 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.core.content.ContextCompat
+import androidx.core.text.BidiFormatter
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import com.example.project.domain.model.RepeatMode
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.example.project.domain.model.PlaybackState
@@ -107,13 +109,27 @@ class PlayerControllerImpl(
         .setUri(if (useFallback) fallbackAudioUrl else playbackUri)
         .setMediaMetadata(
             MediaMetadata.Builder()
-                .setTitle(title)
-                .setArtist(artistName)
-                .setAlbumTitle(album)
+                // Wrap text with bidi markers so Persian/RTL titles render in the right order in
+                // the system media notification (which is laid out LTR) — issue #021. Both title and
+                // displayTitle/subtitle are set because the notification provider may read either.
+                .setTitle(title.forNotification())
+                .setDisplayTitle(title.forNotification())
+                .setArtist(artistName.forNotification())
+                .setSubtitle(artistName.forNotification())
+                .setAlbumTitle(album.forNotification())
                 .setArtworkUri(Uri.parse(coverImageUrl))
                 .build()
         )
         .build()
+
+    /**
+     * Wraps a string with Unicode bidi directionality markers via [BidiFormatter] so RTL text
+     * (e.g. "سلطان قلب‌ها") keeps its correct visual order inside the LTR-laid-out media
+     * notification. NOTE: how far the title is *truncated* is still controlled by the system
+     * notification UI — we can only guarantee the ordering, not the available width.
+     */
+    private fun String.forNotification(): CharSequence =
+        BidiFormatter.getInstance().unicodeWrap(this)
 
     private fun refreshState() {
         val c = controller ?: return
@@ -130,6 +146,12 @@ class PlayerControllerImpl(
                 speed = c.playbackParameters.speed,
                 hasNext = c.hasNextMediaItem(),
                 hasPrevious = c.hasPreviousMediaItem(),
+                isShuffled = c.shuffleModeEnabled,
+                repeatMode = when (c.repeatMode) {
+                    Player.REPEAT_MODE_ONE -> RepeatMode.ONE
+                    Player.REPEAT_MODE_ALL -> RepeatMode.ALL
+                    else -> RepeatMode.OFF
+                },
             )
         }
     }
@@ -158,9 +180,28 @@ class PlayerControllerImpl(
         else c.seekToPreviousMediaItem()
     }
 
-    override fun seekTo(positionMs: Long) = action { c -> c.seekTo(positionMs) }
+    override fun seekTo(positionMs: Long) {
+        // Optimistically update position in state so the UI slider snaps immediately
+        // instead of waiting for the next ExoPlayer event tick.
+        _state.update { it.copy(positionMs = positionMs) }
+        action { c -> c.seekTo(positionMs) }
+    }
 
     override fun setSpeed(speed: Float) = action { c -> c.setPlaybackSpeed(speed) }
+
+    override fun toggleShuffle() = action { c ->
+        c.shuffleModeEnabled = !c.shuffleModeEnabled
+        refreshState()
+    }
+
+    override fun cycleRepeatMode() = action { c ->
+        c.repeatMode = when (c.repeatMode) {
+            Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
+            Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
+            else -> Player.REPEAT_MODE_OFF
+        }
+        refreshState()
+    }
 
     override fun stop() = action { c ->
         c.stop()

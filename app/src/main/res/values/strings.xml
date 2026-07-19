@@ -66,6 +66,7 @@
     <string name="download">Download</string>
     <string name="downloaded">Downloaded</string>
     <string name="downloading">Downloading…</string>
+    <string name="download_progress">%1$d%%</string>
     <string name="download_failed">Download failed</string>
     <string name="downloads_empty">No downloaded songs yet</string>
     <string name="premium_required_title">Premium required</string>
@@ -76,6 +77,7 @@
     <string name="sort_recent">Recently added</string>
     <string name="cd_swipe_delete">Swipe to delete</string>
     <string name="download_started">Download started</string>
+    <string name="download_complete">Download complete</string>
     <string name="download_removed">Removed from downloads</string>
 
     <!-- Playlists -->
@@ -126,13 +128,23 @@
     <string name="cd_pause">Pause</string>
     <string name="cd_next">Next track</string>
     <string name="cd_previous">Previous track</string>
+    <string name="cd_playing_offline">Playing from device</string>
+    <string name="now_playing_offline">Offline</string>
     <string name="now_playing">Now Playing</string>
     <string name="now_playing_from">Playing from</string>
     <string name="player_sleep_timer">Sleep timer</string>
     <string name="player_sleep_off">Off</string>
+    <string name="player_sleep_15s">15 seconds</string>
     <string name="player_sleep_15">15 minutes</string>
     <string name="player_sleep_30">30 minutes</string>
     <string name="player_sleep_60">60 minutes</string>
+    <string name="player_sleep_custom">Custom…</string>
+    <string name="player_sleep_custom_title">Custom sleep timer</string>
+    <string name="player_sleep_custom_hint">Minutes</string>
+    <string name="player_shuffle">Shuffle</string>
+    <string name="player_repeat_off">Repeat off</string>
+    <string name="player_repeat_one">Repeat one</string>
+    <string name="player_repeat_all">Repeat all</string>
     <string name="player_speed">Playback speed</string>
     <string name="player_speed_value">%1$sx</string>
     <string name="player_queue">Up next</string>
@@ -141,6 +153,7 @@
     <string name="cd_share_to_chat">Share to a friend</string>
     <string name="sleep_timer_set">Sleep timer set</string>
     <string name="sleep_timer_cancelled">Sleep timer cancelled</string>
+    <string name="sleep_timer_ended">Sleep timer ended — playback stopped</string>
 
     <!-- Liked / Recently played -->
     <string name="liked_songs_title">Liked Songs</string>

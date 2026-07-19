@@ -9,6 +9,8 @@ import com.example.project.domain.model.PlaybackState
 import com.example.project.domain.model.Song
 import com.example.project.domain.player.PlayerController
 import com.example.project.domain.repository.ChatRepository
+import com.example.project.domain.repository.DownloadRepository
+import com.example.project.domain.repository.LibraryRepository
 import com.example.project.domain.repository.MusicRepository
 import com.example.project.domain.usecase.DownloadResult
 import com.example.project.domain.usecase.DownloadSongUseCase
@@ -43,6 +45,8 @@ class PlayerViewModel(
     private val downloadSong: DownloadSongUseCase,
     private val chatRepository: ChatRepository,
     private val musicRepository: MusicRepository,
+    private val downloadRepository: DownloadRepository,
+    private val libraryRepository: LibraryRepository,
 ) : ViewModel() {
 
     val playbackState: StateFlow<PlaybackState> = player.state
@@ -51,12 +55,40 @@ class PlayerViewModel(
     val conversations: StateFlow<List<Conversation>> = chatRepository.observeConversations()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** Ids of songs that are fully downloaded. Lets Now Playing flip its "offline" indicator the
+     *  moment a download finishes, without leaving and re-opening the screen (issue #019). */
+    val downloadedIds: StateFlow<Set<String>> = downloadRepository.observeDownloadedIds()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
+    /** Ids of liked songs (live from Room). Both the in-app heart and the media-notification Like
+     *  action read this, so they stay in sync regardless of where the toggle happened (issue #002). */
+    val likedIds: StateFlow<Set<String>> = libraryRepository.observeLikedIds()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
     private val _effects = Channel<PlayerEffect>(Channel.BUFFERED)
     val effects = _effects.receiveAsFlow()
 
-    private val _sleepTimerMinutes = MutableStateFlow(0)
-    val sleepTimerMinutes: StateFlow<Int> = _sleepTimerMinutes.asStateFlow()
+    /** Remaining sleep-timer duration in SECONDS (0 = off). Seconds, so we can offer a short
+     *  15-second option that's easy to demo. */
+    private val _sleepTimerSeconds = MutableStateFlow(0)
+    val sleepTimerSeconds: StateFlow<Int> = _sleepTimerSeconds.asStateFlow()
     private var sleepJob: Job? = null
+
+    init {
+        // Surface a "Download complete" message when a track actually finishes downloading — the
+        // worker runs in the background, so "Download started" alone left the user unsure. We skip
+        // the first emission (existing downloads at launch) and only react to NEW completions.
+        viewModelScope.launch {
+            var known: Set<String>? = null
+            downloadRepository.observeDownloadedIds().collect { ids ->
+                val previous = known
+                if (previous != null && (ids - previous).isNotEmpty()) {
+                    _effects.send(PlayerEffect.Message(UiText.from(R.string.download_complete)))
+                }
+                known = ids
+            }
+        }
+    }
 
     fun playSong(song: Song) = playQueue(listOf(song), 0)
 
@@ -82,6 +114,8 @@ class PlayerViewModel(
     fun seekTo(positionMs: Long) = player.seekTo(positionMs)
 
     fun setSpeed(speed: Float) = player.setSpeed(speed)
+    fun toggleShuffle() = player.toggleShuffle()
+    fun cycleRepeatMode() = player.cycleRepeatMode()
 
     fun onToggleLike(song: Song) {
         viewModelScope.launch {
@@ -111,10 +145,11 @@ class PlayerViewModel(
         viewModelScope.launch { chatRepository.shareSong(conversationId, song) }
     }
 
-    fun setSleepTimer(minutes: Int) {
+    /** [totalSeconds] = 0 cancels the timer. Otherwise playback stops after that many seconds. */
+    fun setSleepTimer(totalSeconds: Int) {
         sleepJob?.cancel()
-        _sleepTimerMinutes.value = minutes
-        if (minutes <= 0) {
+        _sleepTimerSeconds.value = totalSeconds
+        if (totalSeconds <= 0) {
             viewModelScope.launch {
                 _effects.send(PlayerEffect.Message(UiText.from(R.string.sleep_timer_cancelled)))
             }
@@ -122,9 +157,12 @@ class PlayerViewModel(
         }
         sleepJob = viewModelScope.launch {
             _effects.send(PlayerEffect.Message(UiText.from(R.string.sleep_timer_set)))
-            delay(minutes * 60_000L)
+            delay(totalSeconds * 1_000L)
             player.stop()
-            _sleepTimerMinutes.value = 0
+            _sleepTimerSeconds.value = 0
+            // Tell the user playback stopped because of the timer (shown as a snackbar by
+            // MainScreen). Now Playing also auto-closes itself when the song clears — issue #017.
+            _effects.send(PlayerEffect.Message(UiText.from(R.string.sleep_timer_ended)))
         }
     }
 }

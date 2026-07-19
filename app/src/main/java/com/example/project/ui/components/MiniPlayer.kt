@@ -1,8 +1,6 @@
 package com.example.project.ui.components
 
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -23,31 +22,38 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.example.project.R
 import com.example.project.domain.model.PlaybackState
+import com.example.project.ui.nowplaying.playerCoverSharedBounds
 import com.example.project.ui.theme.LocalDimens
 
 /**
  * Floating mini player shown above the bottom navigation while a track is active. Tapping the
  * body opens Now Playing; play/pause and next are inline.
+ *
+ * [animatedVisibilityScope] comes from the `AnimatedVisibility` that wraps this in `MainScreen`;
+ * combined with the shared-transition scope it animates the cover into the Now Playing disc.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MiniPlayer(
     state: PlaybackState,
     onPlayPause: () -> Unit,
+    onPrevious: () -> Unit,
     onNext: () -> Unit,
     onClick: () -> Unit,
-    sharedTransitionScope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
+    animatedVisibilityScope: AnimatedVisibilityScope? = null,
 ) {
     val song = state.currentSong ?: return
     val dimens = LocalDimens.current
     val progress by animateFloatAsState(state.progress, label = "miniProgress")
+    val skipIconScale = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1f else 1f
 
     Surface(
         modifier = modifier
@@ -66,21 +72,14 @@ fun MiniPlayer(
                     .padding(dimens.spaceS),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                with(sharedTransitionScope) {
-                    CoverImage(
-                        url = song.coverImageUrl,
-                        contentDescription = stringResource(R.string.cd_cover_art),
-                        modifier = Modifier
-                            .sharedElement(
-                                state = rememberSharedContentState(
-                                    key = "player-cover-${song.id}",
-                                ),
-                                animatedVisibilityScope = animatedVisibilityScope,
-                            )
-                            .size(48.dp),
-                        cornerRadius = 8,
-                    )
-                }
+                CoverImage(
+                    url = song.coverImageUrl,
+                    contentDescription = stringResource(R.string.cd_cover_art),
+                    modifier = Modifier
+                        .size(48.dp)
+                        .playerCoverSharedBounds(animatedVisibilityScope),
+                    cornerRadius = 8,
+                )
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -101,6 +100,14 @@ fun MiniPlayer(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
+                IconButton(onClick = onPrevious, enabled = state.hasPrevious) {
+                    Icon(
+                        imageVector = Icons.Filled.SkipPrevious,
+                        contentDescription = stringResource(R.string.cd_previous),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.scale(scaleX = skipIconScale, scaleY = 1f),
+                    )
+                }
                 IconButton(onClick = onPlayPause) {
                     Icon(
                         imageVector = if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
@@ -115,6 +122,7 @@ fun MiniPlayer(
                         imageVector = Icons.Filled.SkipNext,
                         contentDescription = stringResource(R.string.cd_next),
                         tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.scale(scaleX = skipIconScale, scaleY = 1f),
                     )
                 }
             }

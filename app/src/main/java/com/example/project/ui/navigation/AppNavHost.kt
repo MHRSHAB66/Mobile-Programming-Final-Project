@@ -1,11 +1,11 @@
 package com.example.project.ui.navigation
 
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -13,10 +13,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
+import com.example.project.domain.model.PlaybackState
 import com.example.project.domain.model.Song
 import com.example.project.ui.artist.ArtistScreen
 import com.example.project.ui.chat.ChatDetailScreen
 import com.example.project.ui.chat.ChatListScreen
+import com.example.project.ui.components.MiniPlayer
 import com.example.project.ui.downloads.DownloadsScreen
 import com.example.project.ui.followed.FollowedScreen
 import com.example.project.ui.home.HomeScreen
@@ -31,12 +33,7 @@ import com.example.project.ui.profile.ProfileScreen
 import com.example.project.ui.search.SearchScreen
 import com.example.project.ui.settings.SettingsScreen
 import com.example.project.ui.userprofile.UserProfileScreen
-import androidx.compose.ui.Modifier
-import androidx.compose.animation.AnimatedVisibility
-import com.example.project.domain.model.PlaybackState
-import com.example.project.ui.components.MiniPlayer
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun AppNavHost(
     navController: NavHostController,
@@ -46,7 +43,6 @@ fun AppNavHost(
     playback: PlaybackState,
     contentPadding: PaddingValues,
     onShowMessage: (String) -> Unit,
-    sharedTransitionScope: SharedTransitionScope,
 ) {
     val onPlaySong: (List<Song>, Int) -> Unit = { list, index -> playerViewModel.playQueue(list, index) }
     val onPlayAll: (List<Song>) -> Unit = { playerViewModel.playQueue(it, 0) }
@@ -152,11 +148,12 @@ fun AppNavHost(
             NotificationsScreen(onBack = back)
         }
         composable(Routes.NOW_PLAYING) {
+            // `this` is the AnimatedContentScope for this destination — it drives the shared cover
+            // transition from the mini player (spec §5).
             NowPlayingScreen(
                 playerViewModel = playerViewModel,
                 onBack = back,
-                sharedTransitionScope = sharedTransitionScope,
-                animatedVisibilityScope = this@composable,
+                animatedVisibilityScope = this,
             )
         }
         composable(Routes.LIKED) {
@@ -240,17 +237,13 @@ fun AppNavHost(
                 onBack = back,
                 onPlaySharedSong = playerViewModel::playSongById,
                 contentAboveInput = {
-                    AnimatedVisibility(
-                        visible = playback.isActive,
-                    ) {
+                    AnimatedVisibility(visible = playback.isActive) {
                         MiniPlayer(
                             state = playback,
                             onPlayPause = playerViewModel::togglePlayPause,
+                            onPrevious = playerViewModel::previous,
                             onNext = playerViewModel::next,
-                            onClick = {
-                                navController.navigate(Routes.NOW_PLAYING)
-                            },
-                            sharedTransitionScope = sharedTransitionScope,
+                            onClick = { navController.navigate(Routes.NOW_PLAYING) },
                             animatedVisibilityScope = this@AnimatedVisibility,
                         )
                     }
