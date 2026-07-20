@@ -38,7 +38,7 @@ val presentationModule = module {
 
     // Parameterised ViewModels (receive a route argument via parametersOf).
     viewModel { (playlistId: String) -> PlaylistDetailViewModel(playlistId, get(), get()) }
-    viewModel { (artistId: String) -> ArtistViewModel(artistId, get(), get()) }
+    viewModel { (artistId: String) -> ArtistViewModel(artistId, get(), get(), get()) }
     viewModel { (userId: String) -> UserProfileViewModel(userId, get(), get()) }
     viewModel { (conversationId: String) -> ChatDetailViewModel(conversationId, get()) }
 }

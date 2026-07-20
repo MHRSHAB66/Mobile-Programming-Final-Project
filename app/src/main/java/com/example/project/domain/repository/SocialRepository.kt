@@ -11,7 +11,15 @@ interface SocialRepository {
     suspend fun getUser(id: String): User?
 
     fun observeFollowedUsers(): Flow<List<User>>
+    fun observeFollowedArtistIds(): Flow<Set<String>>
+
+    /** Returns the new followed state after the toggle. */
     suspend fun toggleFollow(userId: String): Boolean
+
+    /** Returns the new followed state after the toggle. */
+    suspend fun toggleFollowArtist(artistId: String): Boolean
+
+    suspend fun refreshFollowing()
 
     suspend fun getPublicPlaylists(userId: String): List<Playlist>
 }

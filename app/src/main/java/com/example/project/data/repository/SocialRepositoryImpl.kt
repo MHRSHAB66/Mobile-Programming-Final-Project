@@ -1,6 +1,10 @@
 package com.example.project.data.repository
 
-import com.example.project.data.mock.MockData
+import com.example.project.data.remote.api.AuthApi
+import com.example.project.data.remote.api.CatalogApi
+import com.example.project.data.remote.api.SocialApi
+import com.example.project.data.remote.api.dto.toDomainPlaylist
+import com.example.project.data.remote.api.dto.toDomainUser
 import com.example.project.domain.model.Playlist
 import com.example.project.domain.model.User
 import com.example.project.domain.repository.SettingsRepository
@@ -8,71 +12,106 @@ import com.example.project.domain.repository.SocialRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 
 /**
- * In-memory social graph. Follow state lives in a StateFlow so the UI updates reactively;
- * a real backend would replace this with remote calls + a websocket/presence feed.
+ * Social graph backed by Melodify FastAPI. Follow lists are cached in memory and refreshed
+ * from `/me/following` (and artists) so Followed / profile screens stay reactive.
  */
 class SocialRepositoryImpl(
+    private val socialApi: SocialApi,
+    private val authApi: AuthApi,
+    private val catalogApi: CatalogApi,
     private val settingsRepository: SettingsRepository,
 ) : SocialRepository {
 
-    private val followedIds = MutableStateFlow(
-        MockData.users.filter { it.isFollowed }.map { it.id }.toSet()
-    )
+    private val followedUsers = MutableStateFlow<List<User>>(emptyList())
+    private val followedArtistIds = MutableStateFlow<Set<String>>(emptySet())
 
     override fun observeCurrentUser(): Flow<User> =
         settingsRepository.settings.map { settings ->
-            // Reflect the signed-in identity (custom "create account" name/handle/avatar) while
-            // keeping the stable local id so chat, follows and playlists keep working.
-            MockData.currentUser.copy(
+            User(
                 id = settings.currentUserId,
-                displayName = settings.displayName ?: MockData.currentUser.displayName,
-                handle = settings.handle ?: MockData.currentUser.handle,
-                avatarUrl = settings.avatarUrl?.takeIf { it.isNotBlank() }
-                    ?: MockData.currentUser.avatarUrl,
+                displayName = settings.displayName.orEmpty().ifBlank { "User" },
+                handle = settings.handle.orEmpty().ifBlank { "@user" },
+                avatarUrl = settings.avatarUrl.orEmpty(),
                 isPremium = settings.isPremium,
             )
         }
 
     override suspend fun searchUsers(query: String): List<User> = withContext(Dispatchers.IO) {
-        val q = query.trim().lowercase()
-        val followed = followedIds.value
-        MockData.users
-            .filter { it.displayName.lowercase().contains(q) || it.handle.lowercase().contains(q) }
-            .map { it.copy(isFollowed = it.id in followed) }
+        runCatching {
+            catalogApi.search(query = query.trim(), type = "user", page = 1, limit = 40)
+                .users
+                .map { it.toDomainUser() }
+        }.getOrDefault(emptyList())
     }
 
     override suspend fun getUser(id: String): User? = withContext(Dispatchers.IO) {
-        MockData.userById(id)?.copy(isFollowed = id in followedIds.value)
+        runCatching { authApi.getUser(id).toDomainUser() }.getOrNull()
     }
 
     override fun observeFollowedUsers(): Flow<List<User>> =
-        followedIds.map { ids ->
-            MockData.users.filter { it.id in ids }.map { it.copy(isFollowed = true) }
+        followedUsers.onStart { refreshFollowing() }
+
+    override fun observeFollowedArtistIds(): Flow<Set<String>> =
+        followedArtistIds.onStart { refreshFollowing() }
+
+    override suspend fun toggleFollow(userId: String): Boolean = withContext(Dispatchers.IO) {
+        val currentlyFollowed = followedUsers.value.any { it.id == userId }
+        runCatching {
+            if (currentlyFollowed) {
+                socialApi.unfollowUser(userId)
+                followedUsers.value = followedUsers.value.filterNot { it.id == userId }
+                false
+            } else {
+                socialApi.followUser(userId)
+                val user = runCatching { authApi.getUser(userId).toDomainUser() }.getOrNull()
+                    ?.copy(isFollowed = true)
+                if (user != null) {
+                    followedUsers.value = listOf(user) + followedUsers.value.filterNot { it.id == userId }
+                } else {
+                    refreshFollowing()
+                }
+                true
+            }
+        }.getOrElse {
+            currentlyFollowed
+        }
+    }
+
+    override suspend fun toggleFollowArtist(artistId: String): Boolean =
+        withContext(Dispatchers.IO) {
+            val currentlyFollowed = artistId in followedArtistIds.value
+            runCatching {
+                if (currentlyFollowed) {
+                    socialApi.unfollowArtist(artistId)
+                    followedArtistIds.value = followedArtistIds.value - artistId
+                    false
+                } else {
+                    socialApi.followArtist(artistId)
+                    followedArtistIds.value = followedArtistIds.value + artistId
+                    true
+                }
+            }.getOrElse { currentlyFollowed }
         }
 
-    override suspend fun toggleFollow(userId: String): Boolean {
-        val current = followedIds.value
-        return if (userId in current) {
-            followedIds.value = current - userId
-            false
-        } else {
-            followedIds.value = current + userId
-            true
+    override suspend fun refreshFollowing() = withContext(Dispatchers.IO) {
+        runCatching {
+            followedUsers.value = socialApi.getFollowing().map { it.toDomainUser().copy(isFollowed = true) }
         }
+        runCatching {
+            followedArtistIds.value = socialApi.getFollowingArtists().map { it.id }.toSet()
+        }
+        Unit
     }
 
     override suspend fun getPublicPlaylists(userId: String): List<Playlist> =
         withContext(Dispatchers.IO) {
-            val user = MockData.userById(userId) ?: return@withContext emptyList()
-            user.publicPlaylistIds.mapNotNull { MockData.playlistById(it) }
+            runCatching {
+                authApi.getUserPlaylists(userId).map { it.toDomainPlaylist() }
+            }.getOrDefault(emptyList())
         }
-
-    /** Combined signal kept for potential future presence/relationship streams. */
-    val relationshipSignals: Flow<Unit> =
-        combine(followedIds, settingsRepository.settings) { _, _ -> Unit }
 }

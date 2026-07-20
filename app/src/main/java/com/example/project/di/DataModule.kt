@@ -10,6 +10,7 @@ import com.example.project.data.remote.api.AuthApi
 import com.example.project.data.remote.api.AuthInterceptor
 import com.example.project.data.remote.api.CatalogApi
 import com.example.project.data.remote.api.InMemoryTokenProvider
+import com.example.project.data.remote.api.SocialApi
 import com.example.project.data.remote.api.TokenProvider
 import com.example.project.data.remote.music.MelodifyCatalogDataSource
 import com.example.project.data.remote.music.RemoteMusicDataSource
@@ -91,6 +92,7 @@ val dataModule = module {
 
     single<AuthApi> { get<Retrofit>().create(AuthApi::class.java) }
     single<CatalogApi> { get<Retrofit>().create(CatalogApi::class.java) }
+    single<SocialApi> { get<Retrofit>().create(SocialApi::class.java) }
     single<AuthRepository> { AuthRepositoryImpl(get(), get(), get()) }
     single<ProfileRepository> { ProfileRepositoryImpl(androidContext(), get(), get()) }
 
@@ -114,7 +116,7 @@ val dataModule = module {
     single<LibraryRepository> { LibraryRepositoryImpl(get(), get()) }
     single<PlaylistRepository> { PlaylistRepositoryImpl(get(), get()) }
     single<SearchRepository> { SearchRepositoryImpl(get(), get(), get()) }
-    single<SocialRepository> { SocialRepositoryImpl(get()) }
+    single<SocialRepository> { SocialRepositoryImpl(get(), get(), get(), get()) }
     single<DownloadRepository> { DownloadRepositoryImpl(androidContext(), get(), get()) }
     single<ChatRepository> { ChatRepositoryImpl(get(), get(), get()) }
 }

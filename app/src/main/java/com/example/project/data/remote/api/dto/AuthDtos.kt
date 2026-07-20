@@ -26,6 +26,8 @@ data class UserDto(
     @Json(name = "avatar_url") val avatarUrl: String? = null,
     @Json(name = "is_premium") val isPremium: Boolean = false,
     @Json(name = "created_at") val createdAt: String? = null,
+    @Json(name = "is_followed") val isFollowed: Boolean = false,
+    @Json(name = "followers_count") val followersCount: Int = 0,
 )
 
 data class MessageResponseDto(

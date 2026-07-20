@@ -11,6 +11,8 @@ fun UserDto.toDomainUser(): User = User(
     handle = if (handle.startsWith("@")) handle else "@$handle",
     avatarUrl = ApiConfig.rewriteUrl(avatarUrl),
     isPremium = isPremium,
+    followers = followersCount,
+    isFollowed = isFollowed,
 )
 
 fun PlaylistDto.toDomainPlaylist(): Playlist = Playlist(
