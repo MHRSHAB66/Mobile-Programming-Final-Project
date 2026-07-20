@@ -22,6 +22,7 @@ data class ArtistDto(
     @Json(name = "image_url") val imageUrl: String? = null,
     val bio: String? = null,
     val followers: Int = 0,
+    @Json(name = "is_followed") val isFollowed: Boolean = false,
 )
 
 data class CatalogPlaylistDto(

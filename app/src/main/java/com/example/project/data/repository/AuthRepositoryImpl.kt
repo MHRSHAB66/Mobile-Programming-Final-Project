@@ -9,6 +9,7 @@ import com.example.project.data.remote.api.dto.TokenResponseDto
 import com.example.project.data.remote.api.toAuthException
 import com.example.project.domain.repository.AuthRepository
 import com.example.project.domain.repository.SettingsRepository
+import com.example.project.domain.repository.SocialRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -16,6 +17,7 @@ class AuthRepositoryImpl(
     private val authApi: AuthApi,
     private val settingsRepository: SettingsRepository,
     private val tokenProvider: TokenProvider,
+    private val socialRepository: SocialRepository,
 ) : AuthRepository {
 
     override suspend fun login(handle: String, password: String): Result<Unit> =
@@ -52,11 +54,13 @@ class AuthRepositoryImpl(
         withContext(Dispatchers.IO) {
             runCatching { authApi.logout() }
             tokenProvider.setToken(null)
+            socialRepository.clearSocialCache()
             settingsRepository.logout()
         }
     }
 
     private suspend fun persistSession(response: TokenResponseDto) {
+        socialRepository.clearSocialCache()
         tokenProvider.setToken(response.accessToken)
         val user = response.user
         settingsRepository.saveSession(
@@ -67,5 +71,6 @@ class AuthRepositoryImpl(
             isPremium = user.isPremium,
             accessToken = response.accessToken,
         )
+        socialRepository.refreshFollowing()
     }
 }

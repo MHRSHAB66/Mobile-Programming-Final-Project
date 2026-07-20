@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -23,6 +25,7 @@ import com.example.project.ui.components.CircleImage
 import com.example.project.ui.components.DetailTopBar
 import com.example.project.ui.components.PlaylistCard
 import com.example.project.ui.components.SectionHeader
+import com.example.project.ui.components.bounceClick
 import com.example.project.ui.theme.LocalDimens
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -32,6 +35,7 @@ fun UserProfileScreen(
     userId: String,
     onBack: () -> Unit,
     onOpenPlaylist: (String) -> Unit,
+    onOpenConnections: (String, String) -> Unit,
     viewModel: UserProfileViewModel = koinViewModel(parameters = { parametersOf(userId) }),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -67,6 +71,23 @@ fun UserProfileScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = dimens.spaceXs),
                     )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = dimens.spaceM),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                    ) {
+                        ProfileCountChip(
+                            count = user?.followers ?: 0,
+                            label = stringResource(R.string.profile_followers),
+                            onClick = { onOpenConnections(userId, "followers") },
+                        )
+                        ProfileCountChip(
+                            count = user?.followingCount ?: 0,
+                            label = stringResource(R.string.profile_following),
+                            onClick = { onOpenConnections(userId, "following") },
+                        )
+                    }
                     if (user?.isFollowed == true) {
                         OutlinedButton(
                             onClick = viewModel::toggleFollow,
@@ -93,5 +114,31 @@ fun UserProfileScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ProfileCountChip(
+    count: Int,
+    label: String,
+    onClick: () -> Unit,
+) {
+    val dimens = LocalDimens.current
+    Column(
+        modifier = Modifier
+            .bounceClick(onClick = onClick)
+            .padding(horizontal = dimens.spaceM, vertical = dimens.spaceS),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = count.asCompactCount(),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }

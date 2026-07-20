@@ -6,6 +6,7 @@ import com.example.project.domain.model.Artist
 import com.example.project.domain.model.Song
 import com.example.project.domain.repository.LibraryRepository
 import com.example.project.domain.repository.MusicRepository
+import com.example.project.domain.repository.SocialRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,19 +24,23 @@ class ArtistViewModel(
     private val artistId: String,
     private val musicRepository: MusicRepository,
     libraryRepository: LibraryRepository,
+    private val socialRepository: SocialRepository,
 ) : ViewModel() {
 
     private val artist = MutableStateFlow<Artist?>(null)
     private val baseSongs = MutableStateFlow<List<Song>>(emptyList())
-    private val followed = MutableStateFlow(false)
 
     val uiState: StateFlow<ArtistUiState> = combine(
-        artist, baseSongs, followed, libraryRepository.observeLikedIds()
-    ) { artist, songs, isFollowed, likedIds ->
+        artist,
+        baseSongs,
+        socialRepository.observeFollowedArtistIds(),
+        libraryRepository.observeLikedIds(),
+    ) { artist, songs, followedIds, likedIds ->
+        val followed = artistId in followedIds
         ArtistUiState(
-            artist = artist?.copy(isFollowed = isFollowed),
+            artist = artist?.copy(isFollowed = followed),
             songs = songs.map { it.copy(isLiked = it.id in likedIds) },
-            isFollowed = isFollowed,
+            isFollowed = followed,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ArtistUiState())
 
@@ -45,14 +50,13 @@ class ArtistViewModel(
 
     private fun load() {
         viewModelScope.launch {
-            val loaded = musicRepository.getArtist(artistId)
-            artist.value = loaded
-            followed.value = loaded?.isFollowed ?: false
+            artist.value = musicRepository.getArtist(artistId)
             baseSongs.value = musicRepository.getArtistSongs(artistId)
+            socialRepository.refreshFollowing()
         }
     }
 
     fun toggleFollow() {
-        followed.value = !followed.value
+        viewModelScope.launch { socialRepository.toggleFollowArtist(artistId) }
     }
 }

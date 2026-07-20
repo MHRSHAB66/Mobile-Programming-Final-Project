@@ -6,6 +6,7 @@ import okhttp3.Response
 /** Attaches `Authorization: Bearer <token>` when a session token is available. */
 class AuthInterceptor(
     private val tokenProvider: TokenProvider,
+    private val sessionExpiryHandler: SessionExpiryHandler,
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val token = tokenProvider.token
@@ -16,7 +17,11 @@ class AuthInterceptor(
                 .header("Authorization", "Bearer $token")
                 .build()
         }
-        return chain.proceed(request)
+        val response = chain.proceed(request)
+        if (response.code == 401 && request.header("Authorization")?.startsWith("Bearer ") == true) {
+            sessionExpiryHandler.onSessionExpired()
+        }
+        return response
     }
 }
 
@@ -24,6 +29,10 @@ class AuthInterceptor(
 interface TokenProvider {
     val token: String?
     fun setToken(token: String?)
+}
+
+interface SessionExpiryHandler {
+    fun onSessionExpired()
 }
 
 class InMemoryTokenProvider : TokenProvider {

@@ -42,8 +42,7 @@ class UserProfileViewModel(
 
     private fun load() {
         viewModelScope.launch {
-            val remoteUser = profileRepository.getUser(userId).getOrNull()
-            baseUser.value = remoteUser ?: socialRepository.getUser(userId)
+            reloadUser()
 
             val remotePlaylists = profileRepository.getUserPublicPlaylists(userId).getOrNull()
             playlists.value = remotePlaylists
@@ -52,6 +51,14 @@ class UserProfileViewModel(
     }
 
     fun toggleFollow() {
-        viewModelScope.launch { socialRepository.toggleFollow(userId) }
+        viewModelScope.launch {
+            socialRepository.toggleFollow(userId)
+            reloadUser()
+        }
+    }
+
+    private suspend fun reloadUser() {
+        val remoteUser = profileRepository.getUser(userId).getOrNull()
+        baseUser.value = remoteUser ?: socialRepository.getUser(userId)
     }
 }
