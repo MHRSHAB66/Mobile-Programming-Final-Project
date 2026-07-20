@@ -94,6 +94,8 @@
     <string name="profile_renew">Renew Premium</string>
     <string name="profile_change_avatar">Change avatar</string>
     <string name="profile_followed">Following</string>
+    <string name="profile_following">Following</string>
+    <string name="profile_followers">Followers</string>
     <string name="profile_public_playlists">Public playlists</string>
     <string name="profile_settings">Settings</string>
     <string name="profile_messages">Messages</string>
@@ -168,6 +170,7 @@
     <string name="artist_title">Artist</string>
     <string name="followed_title">Following</string>
     <string name="followed_empty">You are not following anyone yet</string>
+    <string name="followers_empty">No followers yet</string>
     <string name="top_songs">Popular</string>
     <string name="user_unfollowed">Unfollowed</string>
     <string name="user_followed">Following</string>

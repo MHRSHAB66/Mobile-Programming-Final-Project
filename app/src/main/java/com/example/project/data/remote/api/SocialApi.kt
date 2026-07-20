@@ -18,6 +18,12 @@ interface SocialApi {
     @GET("me/following")
     suspend fun getFollowing(): List<UserDto>
 
+    @GET("users/{userId}/following")
+    suspend fun getUserFollowing(@Path("userId") userId: String): List<UserDto>
+
+    @GET("users/{userId}/followers")
+    suspend fun getUserFollowers(@Path("userId") userId: String): List<UserDto>
+
     @POST("artists/{artistId}/follow")
     suspend fun followArtist(@Path("artistId") artistId: String): MessageResponseDto
 

@@ -12,6 +12,7 @@ fun UserDto.toDomainUser(): User = User(
     avatarUrl = ApiConfig.rewriteUrl(avatarUrl),
     isPremium = isPremium,
     followers = followersCount,
+    followingCount = followingCount,
     isFollowed = isFollowed,
 )
 

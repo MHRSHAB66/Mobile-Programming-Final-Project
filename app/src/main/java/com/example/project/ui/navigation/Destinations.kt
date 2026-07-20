@@ -28,6 +28,7 @@ object Routes {
     const val LIKED = "liked_songs"
     const val RECENT = "recently_played"
     const val FOLLOWED = "followed"
+    const val CONNECTIONS = "connections/{userId}/{mode}"
     const val CHAT_LIST = "chats"
 
     const val PLAYLIST_DETAIL = "playlist/{playlistId}"
@@ -38,12 +39,14 @@ object Routes {
     fun playlistDetail(id: String) = "playlist/$id"
     fun artist(id: String) = "artist/$id"
     fun user(id: String) = "user/$id"
+    fun connections(userId: String, mode: String) = "connections/$userId/$mode"
     fun chatDetail(id: String) = "chat/$id"
 
     object Args {
         const val PLAYLIST_ID = "playlistId"
         const val ARTIST_ID = "artistId"
         const val USER_ID = "userId"
+        const val MODE = "mode"
         const val CONVERSATION_ID = "conversationId"
     }
 }

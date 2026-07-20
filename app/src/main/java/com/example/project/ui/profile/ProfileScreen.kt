@@ -41,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.project.R
+import com.example.project.core.util.asCompactCount
 import com.example.project.ui.components.AppTopBar
 import com.example.project.ui.components.CircleImage
 import com.example.project.ui.components.PlaylistCard
@@ -56,6 +57,7 @@ fun ProfileScreen(
     onOpenSettings: () -> Unit,
     onOpenChats: () -> Unit,
     onOpenFollowed: () -> Unit,
+    onOpenConnections: (String, String) -> Unit,
     onOpenUser: (String) -> Unit,
     onOpenPlaylist: (String) -> Unit,
     onShowMessage: (String) -> Unit,
@@ -156,6 +158,27 @@ fun ProfileScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = dimens.spaceL, vertical = dimens.spaceM),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+            ) {
+                ProfileStat(
+                    count = user?.followers ?: 0,
+                    label = stringResource(R.string.profile_followers),
+                    onClick = {
+                        user?.id?.let { onOpenConnections(it, "followers") }
+                    },
+                )
+                ProfileStat(
+                    count = user?.followingCount ?: 0,
+                    label = stringResource(R.string.profile_following),
+                    onClick = {
+                        user?.id?.let { onOpenConnections(it, "following") }
+                    },
+                )
+            }
 
             PremiumBadge(isPremium = user?.isPremium == true)
 
@@ -221,6 +244,32 @@ fun ProfileScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ProfileStat(
+    count: Int,
+    label: String,
+    onClick: () -> Unit,
+) {
+    val dimens = LocalDimens.current
+    Column(
+        modifier = Modifier
+            .bounceClick(onClick = onClick)
+            .padding(horizontal = dimens.spaceM, vertical = dimens.spaceXs),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = count.asCompactCount(),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

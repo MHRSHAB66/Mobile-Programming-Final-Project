@@ -28,6 +28,7 @@ data class UserDto(
     @Json(name = "created_at") val createdAt: String? = null,
     @Json(name = "is_followed") val isFollowed: Boolean = false,
     @Json(name = "followers_count") val followersCount: Int = 0,
+    @Json(name = "following_count") val followingCount: Int = 0,
 )
 
 data class MessageResponseDto(

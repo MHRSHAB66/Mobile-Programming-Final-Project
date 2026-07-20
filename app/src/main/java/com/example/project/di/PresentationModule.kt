@@ -6,6 +6,7 @@ import com.example.project.ui.auth.AuthViewModel
 import com.example.project.ui.chat.ChatDetailViewModel
 import com.example.project.ui.chat.ChatListViewModel
 import com.example.project.ui.downloads.DownloadsViewModel
+import com.example.project.ui.followed.ConnectionsViewModel
 import com.example.project.ui.followed.FollowedViewModel
 import com.example.project.ui.home.HomeViewModel
 import com.example.project.ui.library.LikedSongsViewModel
@@ -34,6 +35,7 @@ val presentationModule = module {
     viewModel { LikedSongsViewModel(get()) }
     viewModel { RecentlyPlayedViewModel(get()) }
     viewModel { FollowedViewModel(get()) }
+    viewModel { (userId: String, mode: String) -> ConnectionsViewModel(userId, mode, get()) }
     viewModel { ChatListViewModel(get()) }
 
     // Parameterised ViewModels (receive a route argument via parametersOf).
