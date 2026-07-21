@@ -27,3 +27,16 @@ local.properties
 
 # Local Claude instructions (not for repo)
 CLAUDE.md
+
+# Local backend config — contains machine-specific IP address
+gradle.properties
+
+# IDE files beyond what's already listed
+.idea/deviceManager.xml
+.idea/deploymentTargetSelector.xml
+.idea/markdown.xml
+.idea/misc.xml
+.idea/.gitignore
+
+# Claude worktrees and memory
+.claude/
