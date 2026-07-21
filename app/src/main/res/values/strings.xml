@@ -43,11 +43,12 @@
     <string name="home_quick_liked">Liked Songs</string>
     <string name="home_quick_recent">Recently Played</string>
     <string name="home_quick_playlists">My Playlists</string>
-    <string name="home_quick_artists">Top Artists</string>
+    <string name="home_quick_artists">My Artists</string>
     <string name="home_section_popular">Most Popular</string>
     <string name="home_section_new">New Releases</string>
     <string name="home_section_global">Global Playlists</string>
     <string name="home_section_local">Local Playlists</string>
+    <string name="home_section_artists">Top Artists</string>
 
     <!-- Search -->
     <string name="search_hint">Songs, artists, playlists, people…</string>
@@ -170,6 +171,8 @@
     <string name="artist_title">Artist</string>
     <string name="followed_title">Following</string>
     <string name="followed_empty">You are not following anyone yet</string>
+    <string name="followed_artists_title">Following Artists</string>
+    <string name="followed_artists_empty">You are not following any artists yet</string>
     <string name="followers_empty">No followers yet</string>
     <string name="top_songs">Popular</string>
     <string name="user_unfollowed">Unfollowed</string>
