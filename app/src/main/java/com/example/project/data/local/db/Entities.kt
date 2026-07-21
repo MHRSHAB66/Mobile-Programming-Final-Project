@@ -34,9 +34,10 @@ data class RecentlyPlayedEntity(
 )
 
 /** Downloaded songs and their offline file path / status. */
-@Entity(tableName = "downloads")
+@Entity(tableName = "downloads", primaryKeys = ["songId", "userId"])
 data class DownloadEntity(
-    @PrimaryKey val songId: String,
+    val songId: String,
+    val userId: String,
     val title: String,
     val artistId: String,
     val artistName: String,

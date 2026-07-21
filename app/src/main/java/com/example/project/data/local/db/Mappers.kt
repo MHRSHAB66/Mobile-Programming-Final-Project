@@ -30,9 +30,9 @@ fun Song.toRecentEntity(playedAt: Long) = RecentlyPlayedEntity(
     durationMs = durationMs, genre = genre, playedAt = playedAt,
 )
 
-fun Song.toDownloadEntity(state: DownloadState, progress: Int, localPath: String?, addedAt: Long) =
+fun Song.toDownloadEntity(userId: String, state: DownloadState, progress: Int, localPath: String?, addedAt: Long) =
     DownloadEntity(
-        songId = id, title = title, artistId = artistId, artistName = artistName,
+        songId = id, userId = userId, title = title, artistId = artistId, artistName = artistName,
         album = album, coverImageUrl = coverImageUrl, audioUrl = audioUrl,
         durationMs = durationMs, genre = genre,
         state = state.name, progress = progress, localPath = localPath, addedAt = addedAt,

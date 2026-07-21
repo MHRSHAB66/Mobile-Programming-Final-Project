@@ -38,32 +38,32 @@ interface RecentlyPlayedDao {
 
 @Dao
 interface DownloadDao {
-    @Query("SELECT * FROM downloads ORDER BY addedAt DESC")
-    fun observeAllByRecent(): Flow<List<DownloadEntity>>
+    @Query("SELECT * FROM downloads WHERE userId = :userId ORDER BY addedAt DESC")
+    fun observeAllByRecent(userId: String): Flow<List<DownloadEntity>>
 
-    @Query("SELECT * FROM downloads ORDER BY title COLLATE NOCASE ASC")
-    fun observeAllByTitle(): Flow<List<DownloadEntity>>
+    @Query("SELECT * FROM downloads WHERE userId = :userId ORDER BY title COLLATE NOCASE ASC")
+    fun observeAllByTitle(userId: String): Flow<List<DownloadEntity>>
 
-    @Query("SELECT * FROM downloads ORDER BY artistName COLLATE NOCASE ASC")
-    fun observeAllByArtist(): Flow<List<DownloadEntity>>
+    @Query("SELECT * FROM downloads WHERE userId = :userId ORDER BY artistName COLLATE NOCASE ASC")
+    fun observeAllByArtist(userId: String): Flow<List<DownloadEntity>>
 
-    @Query("SELECT songId FROM downloads WHERE state = 'COMPLETED'")
-    fun observeCompletedIds(): Flow<List<String>>
+    @Query("SELECT songId FROM downloads WHERE userId = :userId AND state = 'COMPLETED'")
+    fun observeCompletedIds(userId: String): Flow<List<String>>
 
-    @Query("SELECT EXISTS(SELECT 1 FROM downloads WHERE songId = :songId)")
-    suspend fun exists(songId: String): Boolean
+    @Query("SELECT EXISTS(SELECT 1 FROM downloads WHERE songId = :songId AND userId = :userId)")
+    suspend fun exists(songId: String, userId: String): Boolean
 
-    @Query("SELECT localPath FROM downloads WHERE songId = :songId AND state = 'COMPLETED' LIMIT 1")
-    suspend fun localPath(songId: String): String?
+    @Query("SELECT localPath FROM downloads WHERE songId = :songId AND userId = :userId AND state = 'COMPLETED' LIMIT 1")
+    suspend fun localPath(songId: String, userId: String): String?
 
     @Upsert
     suspend fun upsert(entity: DownloadEntity)
 
-    @Query("UPDATE downloads SET state = :state, progress = :progress, localPath = :localPath WHERE songId = :songId")
-    suspend fun updateStatus(songId: String, state: String, progress: Int, localPath: String?)
+    @Query("UPDATE downloads SET state = :state, progress = :progress, localPath = :localPath WHERE songId = :songId AND userId = :userId")
+    suspend fun updateStatus(songId: String, userId: String, state: String, progress: Int, localPath: String?)
 
-    @Query("DELETE FROM downloads WHERE songId = :songId")
-    suspend fun delete(songId: String)
+    @Query("DELETE FROM downloads WHERE songId = :songId AND userId = :userId")
+    suspend fun delete(songId: String, userId: String)
 }
 
 @Dao

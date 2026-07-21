@@ -7,10 +7,13 @@ import com.example.project.data.remote.music.RemoteMusicDataSource
 import com.example.project.domain.model.Artist
 import com.example.project.domain.model.Song
 import com.example.project.domain.repository.MusicRepository
+import com.example.project.domain.repository.SettingsRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -20,10 +23,12 @@ import kotlinx.coroutines.withContext
  * remote source is empty or fails, it falls back to the bundled mock catalogue so the app
  * always has content. Each song is decorated with liked/download state from Room.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class MusicRepositoryImpl(
     private val dataSource: RemoteMusicDataSource,
     private val likedDao: LikedSongDao,
     private val downloadDao: DownloadDao,
+    private val settingsRepository: SettingsRepository,
 ) : MusicRepository {
 
     @Volatile
@@ -49,13 +54,14 @@ class MusicRepositoryImpl(
     }
 
     private suspend fun decorate(songs: List<Song>): List<Song> {
+        val userId = settingsRepository.settings.first().currentUserId
         val likedIds = likedDao.observeIds().first().toSet()
-        val downloadedIds = downloadDao.observeCompletedIds().first().toSet()
+        val downloadedIds = downloadDao.observeCompletedIds(userId).first().toSet()
         return songs.map { song ->
             song.copy(
                 isLiked = song.id in likedIds,
                 localPath = if (song.id in downloadedIds) {
-                    downloadDao.localPath(song.id) ?: song.localPath
+                    downloadDao.localPath(song.id, userId) ?: song.localPath
                 } else song.localPath,
             )
         }
@@ -99,6 +105,7 @@ class MusicRepositoryImpl(
     }
 
     override fun observeLibrarySignals(): Flow<Unit> =
-        combine(likedDao.observeIds(), downloadDao.observeCompletedIds()) { _, _ -> Unit }
-            .map { }
+        settingsRepository.settings.flatMapLatest { settings ->
+            combine(likedDao.observeIds(), downloadDao.observeCompletedIds(settings.currentUserId)) { _, _ -> Unit }
+        }.map { }
 }
