@@ -179,6 +179,18 @@
     <!-- Notifications screen -->
     <string name="notifications_title">اعلان‌ها</string>
     <string name="notifications_empty">اعلان جدیدی نیست</string>
+    <string name="notifications_follow_title">دنبال‌کننده جدید</string>
+    <string name="notifications_follow_message">آرمان شما را دنبال کرد</string>
+    <string name="notifications_playlist_title">به‌روزرسانی پلی‌لیست</string>
+    <string name="notifications_playlist_message">آهنگ‌های جدیدی به «شب‌های آرام» اضافه شد</string>
+    <string name="notifications_download_title">دانلود کامل شد</string>
+    <string name="notifications_download_message">«رانندگی نیمه‌شب» برای پخش آفلاین آماده است</string>
+    <string name="notifications_release_title">انتشار جدید</string>
+    <string name="notifications_release_message">آهنگ جدید لاله منتشر شده است</string>
+    <string name="notifications_time_two_minutes">۲ دقیقه پیش</string>
+    <string name="notifications_time_one_hour">۱ ساعت پیش</string>
+    <string name="notifications_time_three_hours">۳ ساعت پیش</string>
+    <string name="notifications_time_yesterday">دیروز</string>
 
     <!-- Media notification channel -->
     <string name="playback_channel_name">پخش موسیقی</string>

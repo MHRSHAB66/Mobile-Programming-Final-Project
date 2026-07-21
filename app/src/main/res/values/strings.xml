@@ -195,6 +195,18 @@
     <!-- Notifications screen -->
     <string name="notifications_title">Notifications</string>
     <string name="notifications_empty">No new notifications</string>
+    <string name="notifications_follow_title">New follower</string>
+    <string name="notifications_follow_message">Arman started following you</string>
+    <string name="notifications_playlist_title">Playlist updated</string>
+    <string name="notifications_playlist_message">New songs were added to Chill Nights</string>
+    <string name="notifications_download_title">Download complete</string>
+    <string name="notifications_download_message">Midnight Drive is ready for offline listening</string>
+    <string name="notifications_release_title">New release</string>
+    <string name="notifications_release_message">A new release from Laleh is available</string>
+    <string name="notifications_time_two_minutes">2 min ago</string>
+    <string name="notifications_time_one_hour">1 hr ago</string>
+    <string name="notifications_time_three_hours">3 hr ago</string>
+    <string name="notifications_time_yesterday">Yesterday</string>
 
     <!-- Media notification channel -->
     <string name="playback_channel_name">Playback</string>
