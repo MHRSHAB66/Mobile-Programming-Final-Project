@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,7 +66,10 @@ import com.example.project.ui.theme.BrandPinkDark
 import com.example.project.ui.theme.BrandViolet
 import com.example.project.ui.theme.BrandVioletDark
 import com.example.project.ui.theme.LocalDimens
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
+
+private const val CAROUSEL_AUTO_SCROLL_INTERVAL_MS = 3_500L
 
 @Composable
 fun HomeScreen(
@@ -229,6 +233,19 @@ private fun Carousel(songs: List<Song>, onPlaySong: (List<Song>, Int) -> Unit) {
     if (songs.isEmpty()) return
     val dimens = LocalDimens.current
     val pagerState = rememberPagerState(pageCount = { songs.size })
+
+    LaunchedEffect(pagerState, songs.size) {
+        if (songs.size <= 1) return@LaunchedEffect
+
+        while (true) {
+            delay(CAROUSEL_AUTO_SCROLL_INTERVAL_MS)
+            if (pagerState.isScrollInProgress) continue
+
+            val nextPage = (pagerState.currentPage + 1) % songs.size
+            pagerState.animateScrollToPage(nextPage)
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
