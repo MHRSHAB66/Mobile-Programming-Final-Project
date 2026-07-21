@@ -24,7 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LibraryMusic
-import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -80,7 +80,7 @@ fun HomeScreen(
     onOpenLiked: () -> Unit,
     onOpenRecent: () -> Unit,
     onOpenPlaylistsTab: () -> Unit,
-    onOpenFollowed: () -> Unit,
+    onOpenFollowedArtists: () -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = koinViewModel(),
@@ -109,7 +109,7 @@ fun HomeScreen(
                 onOpenLiked = onOpenLiked,
                 onOpenRecent = onOpenRecent,
                 onOpenPlaylistsTab = onOpenPlaylistsTab,
-                onOpenFollowed = onOpenFollowed,
+                onOpenFollowedArtists = onOpenFollowedArtists,
             )
             else -> EmptyState(
                 icon = Icons.Filled.LibraryMusic,
@@ -129,7 +129,7 @@ private fun HomeContent(
     onOpenLiked: () -> Unit,
     onOpenRecent: () -> Unit,
     onOpenPlaylistsTab: () -> Unit,
-    onOpenFollowed: () -> Unit,
+    onOpenFollowedArtists: () -> Unit,
 ) {
     val dimens = LocalDimens.current
     LazyColumn(
@@ -143,7 +143,7 @@ private fun HomeContent(
                 onOpenLiked = onOpenLiked,
                 onOpenRecent = onOpenRecent,
                 onOpenPlaylistsTab = onOpenPlaylistsTab,
-                onOpenFollowed = onOpenFollowed,
+                onOpenFollowedArtists = onOpenFollowedArtists,
             )
         }
         songRowSection(R.string.home_section_popular, feed.mostPopular, onPlaySong)
@@ -170,7 +170,7 @@ private fun HomeContent(
         }
         item {
             Column {
-                SectionHeader(stringResource(R.string.home_quick_artists))
+                SectionHeader(stringResource(R.string.home_section_artists))
                 LazyRow(contentPadding = PaddingValues(horizontal = dimens.spaceM)) {
                     items(feed.topArtists, key = { it.id }) { artist ->
                         ArtistCard(artist = artist, onClick = { onOpenArtist(artist.id) })
@@ -331,7 +331,7 @@ private fun QuickActions(
     onOpenLiked: () -> Unit,
     onOpenRecent: () -> Unit,
     onOpenPlaylistsTab: () -> Unit,
-    onOpenFollowed: () -> Unit,
+    onOpenFollowedArtists: () -> Unit,
 ) {
     val dimens = LocalDimens.current
     Row(
@@ -353,8 +353,8 @@ private fun QuickActions(
             Brush.linearGradient(listOf(BrandGreen, BrandGreenDark)), onOpenPlaylistsTab, Modifier.weight(1f),
         )
         QuickActionItem(
-            Icons.Filled.People, stringResource(R.string.home_quick_artists),
-            Brush.linearGradient(listOf(BrandBlue, BrandBlueDark)), onOpenFollowed, Modifier.weight(1f),
+            Icons.Filled.MusicNote, stringResource(R.string.home_quick_artists),
+            Brush.linearGradient(listOf(BrandBlue, BrandBlueDark)), onOpenFollowedArtists, Modifier.weight(1f),
         )
     }
 }

@@ -21,6 +21,7 @@ import com.example.project.ui.chat.ChatListScreen
 import com.example.project.ui.components.MiniPlayer
 import com.example.project.ui.downloads.DownloadsScreen
 import com.example.project.ui.followed.ConnectionsScreen
+import com.example.project.ui.followed.FollowedArtistsScreen
 import com.example.project.ui.followed.FollowedScreen
 import com.example.project.ui.home.HomeScreen
 import com.example.project.ui.library.LikedSongsScreen
@@ -99,7 +100,7 @@ fun AppNavHost(
                 onOpenLiked = { navController.navigate(Routes.LIKED) },
                 onOpenRecent = { navController.navigate(Routes.RECENT) },
                 onOpenPlaylistsTab = { navigateTab(Routes.PLAYLISTS) },
-                onOpenFollowed = { navController.navigate(Routes.FOLLOWED) },
+                onOpenFollowedArtists = { navController.navigate(Routes.FOLLOWED_ARTISTS) },
                 contentPadding = contentPadding,
             )
         }
@@ -182,6 +183,9 @@ fun AppNavHost(
         }
         composable(Routes.FOLLOWED) {
             FollowedScreen(onBack = back, onOpenUser = openUser)
+        }
+        composable(Routes.FOLLOWED_ARTISTS) {
+            FollowedArtistsScreen(onBack = back, onOpenArtist = openArtist)
         }
         composable(Routes.CHAT_LIST) {
             ChatListScreen(

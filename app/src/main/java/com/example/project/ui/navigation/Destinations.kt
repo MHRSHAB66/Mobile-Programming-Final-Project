@@ -28,6 +28,7 @@ object Routes {
     const val LIKED = "liked_songs"
     const val RECENT = "recently_played"
     const val FOLLOWED = "followed"
+    const val FOLLOWED_ARTISTS = "followed_artists"
     const val CONNECTIONS = "connections/{userId}/{mode}"
     const val CHAT_LIST = "chats"
 

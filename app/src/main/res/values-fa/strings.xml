@@ -43,11 +43,12 @@
     <string name="home_quick_liked">آهنگ‌های پسندیده</string>
     <string name="home_quick_recent">اخیراً شنیده‌شده</string>
     <string name="home_quick_playlists">پلی‌لیست‌های من</string>
-    <string name="home_quick_artists">هنرمندان برتر</string>
+    <string name="home_quick_artists">هنرمندان من</string>
     <string name="home_section_popular">محبوب‌ترین‌ها</string>
     <string name="home_section_new">جدیدترین‌ها</string>
     <string name="home_section_global">پلی‌لیست‌های جهانی</string>
     <string name="home_section_local">پلی‌لیست‌های محلی</string>
+    <string name="home_section_artists">هنرمندان برتر</string>
 
     <!-- Search -->
     <string name="search_hint">آهنگ، خواننده، پلی‌لیست یا کاربر…</string>
@@ -155,6 +156,8 @@
     <string name="artist_title">هنرمند</string>
     <string name="followed_title">دنبال‌شده‌ها</string>
     <string name="followed_empty">هنوز کسی را دنبال نمی‌کنید</string>
+    <string name="followed_artists_title">هنرمندان دنبال‌شده</string>
+    <string name="followed_artists_empty">هنوز هیچ هنرمندی را دنبال نمی‌کنید</string>
     <string name="top_songs">محبوب</string>
     <string name="user_unfollowed">لغو دنبال کردن انجام شد</string>
     <string name="user_followed">دنبال شد</string>
