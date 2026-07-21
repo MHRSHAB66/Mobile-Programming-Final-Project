@@ -29,12 +29,13 @@ class DownloadWorker(
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val songId = inputData.getString(KEY_SONG_ID) ?: return@withContext Result.failure()
+        val userId = inputData.getString(KEY_USER_ID) ?: return@withContext Result.failure()
         val url = inputData.getString(KEY_AUDIO_URL) ?: return@withContext Result.failure()
 
-        downloadDao.updateStatus(songId, DownloadState.DOWNLOADING.name, 0, null)
+        downloadDao.updateStatus(songId, userId, DownloadState.DOWNLOADING.name, 0, null)
 
         val dir = File(applicationContext.filesDir, "downloads").apply { mkdirs() }
-        val outFile = File(dir, "$songId.mp3")
+        val outFile = File(dir, "${userId}_${songId}.mp3")
 
         try {
             val connection = (URL(url).openConnection() as HttpURLConnection).apply {
@@ -44,7 +45,7 @@ class DownloadWorker(
             }
             connection.connect()
             if (connection.responseCode !in 200..299) {
-                downloadDao.updateStatus(songId, DownloadState.FAILED.name, 0, null)
+                downloadDao.updateStatus(songId, userId, DownloadState.FAILED.name, 0, null)
                 return@withContext Result.failure()
             }
             val total = connection.contentLength.toLong()
@@ -63,25 +64,26 @@ class DownloadWorker(
                             if (pct >= lastReported + 5) {
                                 lastReported = pct
                                 downloadDao.updateStatus(
-                                    songId, DownloadState.DOWNLOADING.name, pct, null
+                                    songId, userId, DownloadState.DOWNLOADING.name, pct, null
                                 )
                             }
                         }
                     }
                 }
             }
-            downloadDao.updateStatus(songId, DownloadState.COMPLETED.name, 100, outFile.absolutePath)
+            downloadDao.updateStatus(songId, userId, DownloadState.COMPLETED.name, 100, outFile.absolutePath)
             Result.success()
         } catch (e: Exception) {
             outFile.delete()
-            downloadDao.updateStatus(songId, DownloadState.FAILED.name, 0, null)
+            downloadDao.updateStatus(songId, userId, DownloadState.FAILED.name, 0, null)
             Result.failure()
         }
     }
 
     companion object {
         const val KEY_SONG_ID = "song_id"
+        const val KEY_USER_ID = "user_id"
         const val KEY_AUDIO_URL = "audio_url"
-        fun uniqueName(songId: String) = "download_$songId"
+        fun uniqueName(userId: String, songId: String) = "download_${userId}_$songId"
     }
 }

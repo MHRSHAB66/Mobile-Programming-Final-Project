@@ -110,7 +110,7 @@ val dataModule = module {
     single<ChatSocket> { FakeChatSocket(get()) }
     single<PlayerController> { PlayerControllerImpl(androidContext()) }
 
-    single<MusicRepository> { MusicRepositoryImpl(get(), get(), get()) }
+    single<MusicRepository> { MusicRepositoryImpl(get(), get(), get(), get()) }
     single<LibraryRepository> { LibraryRepositoryImpl(get(), get()) }
     single<PlaylistRepository> { PlaylistRepositoryImpl(get(), get()) }
     single<SearchRepository> { SearchRepositoryImpl(get(), get(), get()) }
