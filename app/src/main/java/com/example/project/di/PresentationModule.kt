@@ -28,7 +28,7 @@ val presentationModule = module {
     viewModel { MainViewModel(get(), get()) }
     viewModel { PlayerViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { HomeViewModel(get(), get()) }
-    viewModel { SearchViewModel(get(), get(), get()) }
+    viewModel { SearchViewModel(get(), get()) }
     viewModel { DownloadsViewModel(get()) }
     viewModel { PlaylistsViewModel(get()) }
     viewModel { ProfileViewModel(get(), get(), get(), get(), get()) }

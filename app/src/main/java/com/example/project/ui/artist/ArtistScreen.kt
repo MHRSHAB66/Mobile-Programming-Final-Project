@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -24,6 +23,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.example.project.R
 import com.example.project.core.util.asCompactCount
 import com.example.project.domain.model.Song
@@ -45,6 +46,7 @@ fun ArtistScreen(
     viewModel: ArtistViewModel = koinViewModel(parameters = { parametersOf(artistId) }),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val pagingItems = viewModel.pagedSongs.collectAsLazyPagingItems()
     val dimens = LocalDimens.current
     val artist = state.artist
 
@@ -99,9 +101,14 @@ fun ArtistScreen(
                 }
             }
             item { SectionHeader(stringResource(R.string.top_songs)) }
-            itemsIndexed(state.songs, key = { _, s -> s.id }) { index, song ->
+            items(
+                count = pagingItems.itemCount,
+                key = pagingItems.itemKey { it.id },
+            ) { index ->
+                val song = pagingItems[index] ?: return@items
+                val decorated = song.copy(isLiked = song.id in state.likedIds)
                 SongRow(
-                    song = song,
+                    song = decorated,
                     isCurrent = song.id == currentSongId,
                     onClick = { onPlaySong(state.songs, index) },
                     onToggleLike = onToggleLike,

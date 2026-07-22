@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -32,9 +31,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.example.project.R
 import com.example.project.domain.model.Artist
 import com.example.project.domain.model.SearchFilter
+import com.example.project.domain.model.SearchHit
 import com.example.project.domain.model.Song
 import com.example.project.domain.model.User
 import com.example.project.ui.components.AppTopBar
@@ -61,6 +65,7 @@ fun SearchScreen(
     viewModel: SearchViewModel = koinViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val pagingItems = viewModel.pagedHits.collectAsLazyPagingItems()
     val dimens = LocalDimens.current
 
     Column(modifier = modifier.fillMaxSize().statusBarsPadding()) {
@@ -104,7 +109,9 @@ fun SearchScreen(
             )
         } else {
             ResultsList(
-                state = state,
+                query = state.query,
+                likedIds = state.likedIds,
+                pagingItems = pagingItems,
                 currentSongId = currentSongId,
                 onPlaySong = onPlaySong,
                 onToggleLike = onToggleLike,
@@ -211,7 +218,9 @@ private fun HistoryList(
 
 @Composable
 private fun ResultsList(
-    state: SearchUiState,
+    query: String,
+    likedIds: Set<String>,
+    pagingItems: LazyPagingItems<SearchHit>,
     currentSongId: String?,
     onPlaySong: (List<Song>, Int) -> Unit,
     onToggleLike: (Song) -> Unit,
@@ -221,37 +230,61 @@ private fun ResultsList(
     onSubmit: () -> Unit,
     contentPadding: PaddingValues,
 ) {
-    val results = state.results
-    if (!state.isSearching && results.isEmpty) {
+    val refresh = pagingItems.loadState.refresh
+    val isEmpty = pagingItems.itemCount == 0 && refresh is LoadState.NotLoading
+    if (isEmpty) {
         EmptyState(
             icon = Icons.Filled.SearchOff,
-            message = stringResource(R.string.search_no_results, state.query),
+            message = stringResource(R.string.search_no_results, query),
         )
         return
     }
+
     LazyColumn(contentPadding = contentPadding) {
-        when (state.filter) {
-            SearchFilter.SONG -> itemsIndexed(results.songs, key = { _, s -> s.id }) { index, song ->
-                SongRow(
-                    song = song,
-                    isCurrent = song.id == currentSongId,
-                    onClick = {
-                        onPlaySong(results.songs, index)
-                        onSubmit()
-                    },
-                    onToggleLike = onToggleLike,
-                )
-            }
-            SearchFilter.ARTIST -> items(results.artists, key = { it.id }) { artist ->
-                ArtistResultRow(artist) { onOpenArtist(artist.id); onSubmit() }
-            }
-            SearchFilter.PLAYLIST -> items(results.playlists, key = { it.id }) { playlist ->
-                PlaylistResultRow(playlist.coverImageUrl, playlist.title, playlist.description) {
-                    onOpenPlaylist(playlist.id); onSubmit()
+        items(
+            count = pagingItems.itemCount,
+            key = pagingItems.itemKey { it.id },
+        ) { index ->
+            when (val hit = pagingItems[index]) {
+                is SearchHit.SongHit -> {
+                    val song = hit.song.copy(isLiked = hit.song.id in likedIds)
+                    SongRow(
+                        song = song,
+                        isCurrent = song.id == currentSongId,
+                        onClick = {
+                            val loaded = List(pagingItems.itemCount) { i -> pagingItems.peek(i) }
+                                .filterIsInstance<SearchHit.SongHit>()
+                                .map { it.song.copy(isLiked = it.song.id in likedIds) }
+                            val playIndex = loaded.indexOfFirst { it.id == song.id }.coerceAtLeast(0)
+                            onPlaySong(loaded, playIndex)
+                            onSubmit()
+                        },
+                        onToggleLike = onToggleLike,
+                    )
                 }
-            }
-            SearchFilter.USER -> items(results.users, key = { it.id }) { user ->
-                UserResultRow(user) { onOpenUser(user.id); onSubmit() }
+                is SearchHit.ArtistHit -> {
+                    ArtistResultRow(hit.artist) {
+                        onOpenArtist(hit.artist.id)
+                        onSubmit()
+                    }
+                }
+                is SearchHit.PlaylistHit -> {
+                    PlaylistResultRow(
+                        hit.playlist.coverImageUrl,
+                        hit.playlist.title,
+                        hit.playlist.description,
+                    ) {
+                        onOpenPlaylist(hit.playlist.id)
+                        onSubmit()
+                    }
+                }
+                is SearchHit.UserHit -> {
+                    UserResultRow(hit.user) {
+                        onOpenUser(hit.user.id)
+                        onSubmit()
+                    }
+                }
+                null -> Unit
             }
         }
     }

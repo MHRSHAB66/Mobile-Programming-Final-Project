@@ -1,11 +1,13 @@
 package com.example.project.domain.repository
 
+import androidx.paging.PagingData
 import com.example.project.domain.model.Song
 import kotlinx.coroutines.flow.Flow
 
 /** Liked songs and recently played history. Likes sync with the Melodify API and cache in Room. */
 interface LibraryRepository {
     fun observeLikedSongs(): Flow<List<Song>>
+    fun observeLikedSongsPaged(): Flow<PagingData<Song>>
     fun observeLikedIds(): Flow<Set<String>>
     suspend fun isLiked(songId: String): Boolean
     suspend fun toggleLike(song: Song): Boolean

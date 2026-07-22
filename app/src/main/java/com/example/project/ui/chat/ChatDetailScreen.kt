@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -44,6 +43,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.example.project.R
 import com.example.project.core.util.asClockTime
 import com.example.project.domain.model.ChatMessage
@@ -65,15 +66,15 @@ fun ChatDetailScreen(
 ) {
     val peer by viewModel.peer.collectAsStateWithLifecycle()
     val isTyping by viewModel.isPeerTyping.collectAsStateWithLifecycle()
-    val messages by viewModel.messages.collectAsStateWithLifecycle()
+    val pagingItems = viewModel.pagedMessages.collectAsLazyPagingItems()
     val dimens = LocalDimens.current
     var input by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
     // reverseLayout: index 0 is the newest bubble (visual bottom). Keep it pinned above the input.
-    val newestId = messages.firstOrNull()?.id
-    LaunchedEffect(newestId, isTyping) {
-        if (messages.isNotEmpty() || isTyping) {
+    val newestId = pagingItems.peek(0)?.id
+    LaunchedEffect(newestId, isTyping, pagingItems.itemCount) {
+        if (pagingItems.itemCount > 0 || isTyping) {
             listState.animateScrollToItem(0)
         }
     }
@@ -122,7 +123,11 @@ fun ChatDetailScreen(
                 if (isTyping) {
                     item(key = "typing") { TypingBubble() }
                 }
-                items(messages, key = { it.id }) { message ->
+                items(
+                    count = pagingItems.itemCount,
+                    key = pagingItems.itemKey { it.id },
+                ) { index ->
+                    val message = pagingItems[index] ?: return@items
                     MessageBubble(message = message, onPlaySharedSong = onPlaySharedSong)
                 }
             }

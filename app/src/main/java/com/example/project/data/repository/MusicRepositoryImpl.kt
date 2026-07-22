@@ -1,8 +1,14 @@
 package com.example.project.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import com.example.project.data.local.db.DownloadDao
 import com.example.project.data.local.db.LikedSongDao
 import com.example.project.data.mock.MockData
+import com.example.project.data.paging.RemoteSongPagingSource
+import com.example.project.data.remote.api.CatalogApi
+import com.example.project.data.remote.api.dto.toDomainSong
 import com.example.project.data.remote.music.RemoteMusicDataSource
 import com.example.project.domain.model.Artist
 import com.example.project.domain.model.Song
@@ -27,6 +33,7 @@ import kotlinx.coroutines.withContext
 @OptIn(ExperimentalCoroutinesApi::class)
 class MusicRepositoryImpl(
     private val dataSource: RemoteMusicDataSource,
+    private val catalogApi: CatalogApi,
     private val likedDao: LikedSongDao,
     private val downloadDao: DownloadDao,
     private val settingsRepository: SettingsRepository,
@@ -150,8 +157,22 @@ class MusicRepositoryImpl(
     }
 
     override suspend fun getArtistSongs(artistId: String): List<Song> = withContext(Dispatchers.IO) {
+        val remote = runCatching {
+            catalogApi.getArtistSongs(artistId, page = 1, limit = 200).items.map { it.toDomainSong() }
+        }.getOrNull()
+        if (!remote.isNullOrEmpty()) return@withContext decorate(remote)
         decorate(allSongs().filter { it.artistId == artistId })
     }
+
+    override fun getArtistSongsPaged(artistId: String): Flow<PagingData<Song>> =
+        Pager(
+            config = PagingConfig(pageSize = 20, enablePlaceholders = false, initialLoadSize = 20),
+            pagingSourceFactory = {
+                RemoteSongPagingSource { page, limit ->
+                    catalogApi.getArtistSongs(artistId, page = page, limit = limit)
+                }
+            },
+        ).flow
 
     override fun observeLibrarySignals(): Flow<Unit> =
         settingsRepository.settings.flatMapLatest { settings ->

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
@@ -26,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import com.example.project.R
 import com.example.project.domain.model.Song
 import com.example.project.ui.components.DetailTopBar
@@ -44,6 +45,7 @@ fun LikedSongsScreen(
     viewModel: LikedSongsViewModel = koinViewModel(),
 ) {
     val songs by viewModel.songs.collectAsStateWithLifecycle()
+    val pagingItems = viewModel.pagedSongs.collectAsLazyPagingItems()
 
     Scaffold(
         topBar = { DetailTopBar(title = stringResource(R.string.liked_songs_title), onBack = onBack) }
@@ -67,7 +69,11 @@ fun LikedSongsScreen(
                     )
                 }
             } else {
-                itemsIndexed(songs, key = { _, s -> s.id }) { index, song ->
+                items(
+                    count = pagingItems.itemCount,
+                    key = pagingItems.itemKey { it.id },
+                ) { index ->
+                    val song = pagingItems[index] ?: return@items
                     SwipeToRemove(onRemoved = { onRemove(song) }) {
                         SongRow(
                             song = song,

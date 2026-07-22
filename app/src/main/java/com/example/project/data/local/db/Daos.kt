@@ -14,6 +14,9 @@ interface LikedSongDao {
     @Query("SELECT * FROM liked_songs ORDER BY likedAt DESC")
     fun observeAll(): Flow<List<LikedSongEntity>>
 
+    @Query("SELECT * FROM liked_songs ORDER BY likedAt DESC")
+    fun pagingAll(): PagingSource<Int, LikedSongEntity>
+
     @Query("SELECT songId FROM liked_songs")
     fun observeIds(): Flow<List<String>>
 

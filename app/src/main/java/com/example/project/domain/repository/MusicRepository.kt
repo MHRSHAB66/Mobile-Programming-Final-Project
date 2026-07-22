@@ -1,10 +1,11 @@
 package com.example.project.domain.repository
 
+import androidx.paging.PagingData
 import com.example.project.domain.model.Artist
 import com.example.project.domain.model.Song
 import kotlinx.coroutines.flow.Flow
 
-/** Read access to the music catalogue (songs + artists). Backed by mock data today. */
+/** Read access to the music catalogue (songs + artists). */
 interface MusicRepository {
     suspend fun getTrendingSongs(): List<Song>
     suspend fun getMostPopular(): List<Song>
@@ -21,6 +22,9 @@ interface MusicRepository {
     suspend fun getArtists(): List<Artist>
     suspend fun getArtist(id: String): Artist?
     suspend fun getArtistSongs(artistId: String): List<Song>
+
+    /** Spec §3 — long artist track lists use Paging 3. */
+    fun getArtistSongsPaged(artistId: String): Flow<PagingData<Song>>
 
     /** Emits whenever liked/download state changes so lists can re-decorate songs. */
     fun observeLibrarySignals(): Flow<Unit>

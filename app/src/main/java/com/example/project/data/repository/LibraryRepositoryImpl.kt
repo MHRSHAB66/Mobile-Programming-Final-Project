@@ -1,5 +1,9 @@
 package com.example.project.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.example.project.data.local.db.LikedSongDao
 import com.example.project.data.local.db.RecentlyPlayedDao
 import com.example.project.data.local.db.toLikedEntity
@@ -25,6 +29,12 @@ class LibraryRepositoryImpl(
 
     override fun observeLikedSongs(): Flow<List<Song>> =
         likedDao.observeAll().map { list -> list.map { it.toSong() } }
+
+    override fun observeLikedSongsPaged(): Flow<PagingData<Song>> =
+        Pager(
+            config = PagingConfig(pageSize = 30, enablePlaceholders = false),
+            pagingSourceFactory = { likedDao.pagingAll() },
+        ).flow.map { paging -> paging.map { it.toSong() } }
 
     override fun observeLikedIds(): Flow<Set<String>> =
         likedDao.observeIds().map { it.toSet() }

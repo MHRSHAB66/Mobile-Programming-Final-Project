@@ -4,7 +4,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.example.project.data.mock.MockData
-import com.example.project.data.paging.ListPagingSource
+import com.example.project.data.paging.RemoteSongPagingSource
 import com.example.project.data.remote.api.CatalogApi
 import com.example.project.data.remote.api.dto.toDomainPlaylist
 import com.example.project.data.remote.api.dto.toDomainSong
@@ -24,15 +24,25 @@ class PlaylistRepositoryImpl(
 
     @Volatile
     private var cached: List<Playlist>? = null
+    @Volatile
+    private var playlistsFromRemote: Boolean = false
 
     private suspend fun allPlaylists(): List<Playlist> {
-        cached?.let { return it }
+        if (playlistsFromRemote) {
+            cached?.let { return it }
+        }
         val remote = runCatching { catalogApi.getPlaylists().map { it.toDomainPlaylist() } }
             .getOrNull()
             ?.takeIf { it.isNotEmpty() }
-        val loaded = remote ?: MockData.playlists
-        cached = loaded
-        return loaded
+        if (remote != null) {
+            cached = remote
+            playlistsFromRemote = true
+            return remote
+        }
+        val fallback = cached ?: MockData.playlists
+        cached = fallback
+        playlistsFromRemote = false
+        return fallback
     }
 
     override suspend fun getPlaylists(type: PlaylistType): List<Playlist> =
@@ -58,13 +68,12 @@ class PlaylistRepositoryImpl(
     }
 
     override fun getPlaylistSongsPaged(id: String): Flow<PagingData<Song>> =
-        Pager(PagingConfig(pageSize = 20, enablePlaceholders = false)) {
-            val songs = runCatching {
-                // Blocking resolve for the paging source factory; list is bounded.
-                kotlinx.coroutines.runBlocking {
-                    getPlaylistSongs(id)
+        Pager(
+            config = PagingConfig(pageSize = 20, enablePlaceholders = false, initialLoadSize = 20),
+            pagingSourceFactory = {
+                RemoteSongPagingSource { page, limit ->
+                    catalogApi.getPlaylistSongs(id, page = page, limit = limit)
                 }
-            }.getOrDefault(emptyList())
-            ListPagingSource(songs)
-        }.flow
+            },
+        ).flow
 }
