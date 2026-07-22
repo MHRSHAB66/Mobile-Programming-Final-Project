@@ -19,9 +19,10 @@ import kotlinx.coroutines.withContext
 
 /**
  * Catalogue repository. Pulls songs/artists from the injected [RemoteMusicDataSource]
- * (Jamendo when configured, otherwise the mock source) and caches them in memory. If the
- * remote source is empty or fails, it falls back to the bundled mock catalogue so the app
- * always has content. Each song is decorated with liked/download state from Room.
+ * and caches successful remote results in memory. If the remote source is empty or fails,
+ * falls back to the bundled mock catalogue so the UI still has content — but that mock
+ * fallback is **not** treated as a permanent cache, so the next call retries the backend
+ * once connectivity returns.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MusicRepositoryImpl(
@@ -34,23 +35,60 @@ class MusicRepositoryImpl(
     @Volatile
     private var cachedSongs: List<Song>? = null
 
+    /** True only when [cachedSongs] came from a successful remote fetch. */
+    @Volatile
+    private var songsFromRemote: Boolean = false
+
     @Volatile
     private var cachedArtists: List<Artist>? = null
 
+    @Volatile
+    private var artistsFromRemote: Boolean = false
+
     private suspend fun allSongs(): List<Song> {
-        cachedSongs?.let { return it }
-        val loaded = runCatching { dataSource.getSongs() }.getOrNull()
-            ?.takeIf { it.isNotEmpty() } ?: MockData.songs
-        cachedSongs = loaded
-        return loaded
+        if (songsFromRemote) {
+            cachedSongs?.let { return it }
+        }
+
+        val remote = runCatching { dataSource.getSongs() }.getOrNull()?.takeIf { it.isNotEmpty() }
+        if (remote != null) {
+            cachedSongs = remote
+            songsFromRemote = true
+            return remote
+        }
+
+        // Keep a previous remote catalogue if we already had one (transient blip).
+        if (songsFromRemote) {
+            cachedSongs?.let { return it }
+        }
+
+        // Temporary offline fallback — next call will try the backend again.
+        val fallback = cachedSongs ?: MockData.songs
+        cachedSongs = fallback
+        songsFromRemote = false
+        return fallback
     }
 
     private suspend fun allArtists(): List<Artist> {
-        cachedArtists?.let { return it }
-        val loaded = runCatching { dataSource.getArtists() }.getOrNull()
-            ?.takeIf { it.isNotEmpty() } ?: MockData.artists
-        cachedArtists = loaded
-        return loaded
+        if (artistsFromRemote) {
+            cachedArtists?.let { return it }
+        }
+
+        val remote = runCatching { dataSource.getArtists() }.getOrNull()?.takeIf { it.isNotEmpty() }
+        if (remote != null) {
+            cachedArtists = remote
+            artistsFromRemote = true
+            return remote
+        }
+
+        if (artistsFromRemote) {
+            cachedArtists?.let { return it }
+        }
+
+        val fallback = cachedArtists ?: MockData.artists
+        cachedArtists = fallback
+        artistsFromRemote = false
+        return fallback
     }
 
     private suspend fun decorate(songs: List<Song>): List<Song> {
@@ -99,7 +137,13 @@ class MusicRepositoryImpl(
     override suspend fun getArtist(id: String): Artist? = withContext(Dispatchers.IO) {
         val fresh = runCatching { dataSource.getArtist(id) }.getOrNull()
         if (fresh != null) {
-            cachedArtists = cachedArtists?.map { if (it.id == id) fresh else it }
+            cachedArtists = when {
+                cachedArtists == null -> listOf(fresh)
+                cachedArtists!!.any { it.id == id } ->
+                    cachedArtists!!.map { if (it.id == id) fresh else it }
+                else -> cachedArtists!! + fresh
+            }
+            artistsFromRemote = true
             return@withContext fresh
         }
         allArtists().firstOrNull { it.id == id }
