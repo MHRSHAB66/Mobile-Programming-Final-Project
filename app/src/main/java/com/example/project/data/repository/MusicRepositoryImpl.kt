@@ -97,6 +97,11 @@ class MusicRepositoryImpl(
     }
 
     override suspend fun getArtist(id: String): Artist? = withContext(Dispatchers.IO) {
+        val fresh = runCatching { dataSource.getArtist(id) }.getOrNull()
+        if (fresh != null) {
+            cachedArtists = cachedArtists?.map { if (it.id == id) fresh else it }
+            return@withContext fresh
+        }
         allArtists().firstOrNull { it.id == id }
     }
 
