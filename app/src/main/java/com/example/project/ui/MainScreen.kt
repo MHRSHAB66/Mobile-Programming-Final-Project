@@ -34,8 +34,9 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 /**
- * Single-Activity host: bottom navigation + floating mini player on the five main tabs, a
- * shared snackbar host for one-time player effects, and the [AppNavHost] for all destinations.
+ * Single-Activity host: bottom navigation on the five main tabs, a floating mini player on every
+ * destination except Now Playing and Chat Detail, a shared snackbar host for one-time player
+ * effects, and the [AppNavHost] for all destinations.
  */
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -72,8 +73,13 @@ fun MainScreen() {
     }
 
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-    val showBars = currentRoute in mainTabRoutes
+    val showBottomBar = currentRoute in mainTabRoutes
     val isChatDetail = currentRoute == Routes.CHAT_DETAIL
+    val showMiniPlayer =
+        currentRoute != null &&
+            currentRoute != Routes.NOW_PLAYING &&
+            !isChatDetail &&
+            playback.isActive
 
     // SharedTransitionLayout hosts the MiniPlayer → Now Playing cover animation (spec §5). The
     // scope is published via a CompositionLocal so the two cover composables (owned by the player
@@ -88,14 +94,15 @@ fun MainScreen() {
                     // no chat input (which manages its own insets). Mahyar fix: issue #022.
                     Column(
                         modifier = when {
-                            showBars -> Modifier
+                            showBottomBar -> Modifier
                             isChatDetail -> Modifier
                             else -> Modifier.navigationBarsPadding()
                         },
                     ) {
-                        // Always in composition so MiniPlayer runs its exit animation when Now
-                        // Playing opens — that exit is what the shared cover transitions out of.
-                        AnimatedVisibility(visible = showBars && playback.isActive) {
+                        // Keep this AnimatedVisibility in composition while navigating to Now
+                        // Playing so its exit can drive the shared cover transition. Chat Detail
+                        // renders its own MiniPlayer directly above the message input.
+                        AnimatedVisibility(visible = showMiniPlayer) {
                             MiniPlayer(
                                 state = playback,
                                 onPlayPause = playerViewModel::togglePlayPause,
@@ -105,7 +112,7 @@ fun MainScreen() {
                                 animatedVisibilityScope = this@AnimatedVisibility,
                             )
                         }
-                        AnimatedVisibility(visible = showBars) {
+                        AnimatedVisibility(visible = showBottomBar) {
                             BottomBar(
                                 currentRoute = currentRoute,
                                 onTabSelected = { tab: TopLevelTab ->
