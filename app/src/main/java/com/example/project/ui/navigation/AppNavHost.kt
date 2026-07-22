@@ -159,6 +159,7 @@ fun AppNavHost(
             NowPlayingScreen(
                 playerViewModel = playerViewModel,
                 onBack = back,
+                onOpenArtist = openArtist,
                 animatedVisibilityScope = this,
             )
         }

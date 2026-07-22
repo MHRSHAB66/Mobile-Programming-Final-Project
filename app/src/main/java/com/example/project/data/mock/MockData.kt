@@ -10,8 +10,7 @@ import kotlin.math.abs
 
 /**
  * In-memory MOCK BACKEND and fallback catalogue. There is NO real backend/API here; when a
- * Jamendo client id is configured the app instead loads real Creative-Commons tracks via
- * [com.example.project.data.remote.music.JamendoMusicDataSource]. Swapping sources only touches
+ * Jamendo client id is configured the app instead loads real Creative-Commons tracks via. Swapping sources only touches
  * the data-source layer — the rest of the app is unchanged.
  *
  * SONGS: titles and artists are REAL, well-known tracks (Iranian / English / world) so the

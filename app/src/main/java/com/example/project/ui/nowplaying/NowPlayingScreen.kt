@@ -90,6 +90,7 @@ import com.example.project.ui.theme.LocalDimens
 fun NowPlayingScreen(
     playerViewModel: PlayerViewModel,
     onBack: () -> Unit,
+    onOpenArtist: (String) -> Unit = {},
     animatedVisibilityScope: androidx.compose.animation.AnimatedVisibilityScope? = null,
 ) {
     val state by playerViewModel.playbackState.collectAsStateWithLifecycle()
@@ -252,6 +253,10 @@ fun NowPlayingScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.bounceClick(
+                            enabled = !song?.artistId.isNullOrBlank(),
+                            onClick = { song?.artistId?.let(onOpenArtist) },
+                        ),
                     )
                     // Clear textual indicator that this track is available offline — issue #009.
                     // Reacts live the moment the download finishes (isOffline) — issue #019.

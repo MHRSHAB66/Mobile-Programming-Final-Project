@@ -27,4 +27,8 @@ class MelodifyCatalogDataSource(
             catalogApi.getArtists(page = 1, limit = 200).items.map { it.toDomainArtist() }
         }.getOrDefault(emptyList())
     }
+
+    override suspend fun getArtist(id: String): Artist? = withContext(Dispatchers.IO) {
+        runCatching { catalogApi.getArtist(id).toDomainArtist() }.getOrNull()
+    }
 }
