@@ -2,12 +2,9 @@ package com.example.project.ui.chat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
 import com.example.project.domain.model.ChatMessage
 import com.example.project.domain.model.User
 import com.example.project.domain.repository.ChatRepository
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -19,9 +16,10 @@ class ChatDetailViewModel(
     private val chatRepository: ChatRepository,
 ) : ViewModel() {
 
-    // Offline-first, Paging-ready message history (newest first; rendered reversed).
-    val messages: Flow<PagingData<ChatMessage>> =
-        chatRepository.observeMessagesPaged(conversationId).cachedIn(viewModelScope)
+    /** Newest-first for reverseLayout LazyColumn; Room Flow updates ticks live. */
+    val messages: StateFlow<List<ChatMessage>> = chatRepository.observeMessages(conversationId)
+        .map { list -> list.asReversed() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val isPeerTyping: StateFlow<Boolean> = chatRepository.observeTyping(conversationId)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
@@ -31,8 +29,10 @@ class ChatDetailViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     init {
+        chatRepository.setActiveConversation(conversationId)
         viewModelScope.launch {
             chatRepository.connect()
+            chatRepository.syncMessages(conversationId)
             chatRepository.markConversationRead(conversationId)
         }
     }
@@ -45,5 +45,10 @@ class ChatDetailViewModel(
 
     fun onTyping() {
         viewModelScope.launch { chatRepository.notifyTyping(conversationId) }
+    }
+
+    override fun onCleared() {
+        chatRepository.setActiveConversation(null)
+        super.onCleared()
     }
 }

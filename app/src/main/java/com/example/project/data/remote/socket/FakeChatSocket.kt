@@ -47,9 +47,9 @@ class FakeChatSocket(
     private fun simulateServerRoundTrip(message: ChatMessage) {
         scope.launch {
             delay(500)
-            _incoming.emit(SocketEvent.StatusChanged(message.id, MessageStatus.SENT))
+            _incoming.emit(SocketEvent.StatusChanged(message.conversationId, message.id, MessageStatus.SENT))
             delay(900)
-            _incoming.emit(SocketEvent.StatusChanged(message.id, MessageStatus.READ))
+            _incoming.emit(SocketEvent.StatusChanged(message.conversationId, message.id, MessageStatus.READ))
 
             // Peer occasionally replies to keep the conversation feeling live.
             if ((0..2).random() != 0) {

@@ -26,8 +26,20 @@ interface ChatRepository {
     suspend fun sendText(conversationId: String, text: String)
     suspend fun shareSong(conversationId: String, song: Song)
     suspend fun markConversationRead(conversationId: String)
+    suspend fun markConversationRead(conversationId: String, upToMessageId: String)
     suspend fun notifyTyping(conversationId: String)
 
     /** Opens the realtime connection (call from a coroutine; cancellation closes it). */
     suspend fun connect()
+
+    /** Creates or returns an existing 1:1 chat with [peerUserId]. */
+    suspend fun openDirectMessage(peerUserId: String): Result<String>
+
+    /** Loads recent messages from the API into Room for [conversationId]. */
+    suspend fun syncMessages(conversationId: String)
+
+    /** Marks which conversation is currently open so unread + auto-read stay correct. */
+    fun setActiveConversation(conversationId: String?)
+
+    fun clearChatCache()
 }

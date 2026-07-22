@@ -7,14 +7,19 @@ import kotlinx.coroutines.flow.Flow
 /** Events pushed from the server to the client over the realtime connection. */
 sealed interface SocketEvent {
     data class MessageReceived(val message: ChatMessage) : SocketEvent
-    data class StatusChanged(val messageId: String, val status: MessageStatus) : SocketEvent
+    data class StatusChanged(
+        val conversationId: String,
+        val messageId: String,
+        val status: MessageStatus,
+    ) : SocketEvent
     data class Typing(val conversationId: String, val isTyping: Boolean) : SocketEvent
+    data class PresenceChanged(val userId: String, val isOnline: Boolean) : SocketEvent
 }
 
 /** Messages sent from the client to the server. */
 sealed interface SocketCommand {
     data class SendMessage(val message: ChatMessage) : SocketCommand
-    data class Typing(val conversationId: String) : SocketCommand
+    data class Typing(val conversationId: String, val isTyping: Boolean = true) : SocketCommand
     data class MarkRead(val conversationId: String) : SocketCommand
 }
 

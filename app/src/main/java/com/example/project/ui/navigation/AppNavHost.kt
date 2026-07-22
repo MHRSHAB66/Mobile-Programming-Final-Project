@@ -232,6 +232,7 @@ fun AppNavHost(
                 onBack = back,
                 onOpenPlaylist = openPlaylist,
                 onOpenConnections = openConnections,
+                onOpenChat = { navController.navigate(Routes.chatDetail(it)) },
             )
         }
         composable(

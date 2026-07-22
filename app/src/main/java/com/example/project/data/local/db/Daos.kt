@@ -101,6 +101,36 @@ interface ChatMessageDao {
     @Query("UPDATE chat_messages SET status = 'READ' WHERE conversationId = :conversationId AND isFromMe = 1")
     suspend fun markMineRead(conversationId: String)
 
+    @Query(
+        """
+        UPDATE chat_messages SET status = 'READ'
+        WHERE conversationId = :conversationId
+          AND isFromMe = 1
+          AND timestamp <= (
+            SELECT timestamp FROM chat_messages WHERE id = :upToMessageId
+          )
+        """,
+    )
+    suspend fun markMineReadUpTo(conversationId: String, upToMessageId: String)
+
     @Query("SELECT COUNT(*) FROM chat_messages WHERE conversationId = :conversationId")
     suspend fun count(conversationId: String): Int
+
+    @Query("DELETE FROM chat_messages WHERE id = :id")
+    suspend fun deleteById(id: String)
+
+    @Query("DELETE FROM chat_messages")
+    suspend fun deleteAll()
+
+    @Query(
+        "SELECT id FROM chat_messages WHERE conversationId = :conversationId " +
+            "ORDER BY timestamp DESC LIMIT 1",
+    )
+    suspend fun latestMessageId(conversationId: String): String?
+
+    @Query(
+        "SELECT id FROM chat_messages WHERE conversationId = :conversationId " +
+            "AND isFromMe = 0 ORDER BY timestamp DESC LIMIT 1",
+    )
+    suspend fun latestIncomingMessageId(conversationId: String): String?
 }
