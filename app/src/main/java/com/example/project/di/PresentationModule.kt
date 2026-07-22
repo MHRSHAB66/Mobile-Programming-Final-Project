@@ -12,6 +12,7 @@ import com.example.project.ui.followed.FollowedViewModel
 import com.example.project.ui.home.HomeViewModel
 import com.example.project.ui.library.LikedSongsViewModel
 import com.example.project.ui.library.RecentlyPlayedViewModel
+import com.example.project.ui.notifications.NotificationsViewModel
 import com.example.project.ui.player.PlayerViewModel
 import com.example.project.ui.playlistdetail.PlaylistDetailViewModel
 import com.example.project.ui.playlists.PlaylistsViewModel
@@ -39,6 +40,7 @@ val presentationModule = module {
     viewModel { FollowedArtistsViewModel(get(), get()) }
     viewModel { (userId: String, mode: String) -> ConnectionsViewModel(userId, mode, get()) }
     viewModel { ChatListViewModel(get()) }
+    viewModel { NotificationsViewModel(get()) }
 
     // Parameterised ViewModels (receive a route argument via parametersOf).
     viewModel { (playlistId: String) -> PlaylistDetailViewModel(playlistId, get(), get()) }

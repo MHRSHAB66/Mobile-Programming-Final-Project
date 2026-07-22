@@ -72,7 +72,7 @@ fun ChatDetailScreen(
     val listState = rememberLazyListState()
 
     // reverseLayout: index 0 is the newest bubble (visual bottom). Keep it pinned above the input.
-    val newestId = pagingItems.peek(0)?.id
+    val newestId = if (pagingItems.itemCount > 0) pagingItems.peek(0)?.id else null
     LaunchedEffect(newestId, isTyping, pagingItems.itemCount) {
         if (pagingItems.itemCount > 0 || isTyping) {
             listState.animateScrollToItem(0)

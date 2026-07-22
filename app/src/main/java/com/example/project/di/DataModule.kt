@@ -17,6 +17,7 @@ import com.example.project.data.remote.music.MelodifyCatalogDataSource
 import com.example.project.data.remote.music.RemoteMusicDataSource
 import com.example.project.data.remote.api.LibraryApi
 import com.example.project.data.remote.api.ChatApi
+import com.example.project.data.remote.api.NotificationsApi
 import com.example.project.data.remote.socket.ChatSocket
 import com.example.project.data.remote.socket.MelodifyChatSocket
 import com.example.project.data.repository.AuthRepositoryImpl
@@ -24,6 +25,7 @@ import com.example.project.data.repository.ChatRepositoryImpl
 import com.example.project.data.repository.DownloadRepositoryImpl
 import com.example.project.data.repository.LibraryRepositoryImpl
 import com.example.project.data.repository.MusicRepositoryImpl
+import com.example.project.data.repository.NotificationRepositoryImpl
 import com.example.project.data.repository.PlaylistRepositoryImpl
 import com.example.project.data.repository.ProfileRepositoryImpl
 import com.example.project.data.repository.SearchRepositoryImpl
@@ -35,6 +37,7 @@ import com.example.project.domain.repository.ChatRepository
 import com.example.project.domain.repository.DownloadRepository
 import com.example.project.domain.repository.LibraryRepository
 import com.example.project.domain.repository.MusicRepository
+import com.example.project.domain.repository.NotificationRepository
 import com.example.project.domain.repository.PlaylistRepository
 import com.example.project.domain.repository.ProfileRepository
 import com.example.project.domain.repository.SearchRepository
@@ -135,6 +138,8 @@ val dataModule = module {
 
     single<ChatApi> { get<Retrofit>().create(ChatApi::class.java) }
     single<LibraryApi> { get<Retrofit>().create(LibraryApi::class.java) }
+    single<NotificationsApi> { get<Retrofit>().create(NotificationsApi::class.java) }
+    single<NotificationRepository> { NotificationRepositoryImpl(get()) }
     single<LibraryRepository> { LibraryRepositoryImpl(get(), get(), get(), get()) }
     single<ChatSocket> { MelodifyChatSocket(get(), get(), get(), get()) }
     single<ChatRepository> { ChatRepositoryImpl(get(), get(), get(), get(), get(), get()) }

@@ -155,6 +155,10 @@
     <string name="cd_like">Like</string>
     <string name="cd_unlike">Unlike</string>
     <string name="cd_share_to_chat">Share to a friend</string>
+    <string name="share_song_title">Share song</string>
+    <string name="share_song_subtitle">Send this track in a chat</string>
+    <string name="share_no_friends">Start a chat with someone first, then you can share songs here</string>
+    <string name="share_send">Send</string>
     <string name="sleep_timer_set">Sleep timer set</string>
     <string name="sleep_timer_cancelled">Sleep timer cancelled</string>
     <string name="sleep_timer_ended">Sleep timer ended — playback stopped</string>
@@ -199,6 +203,7 @@
     <!-- Notifications screen -->
     <string name="notifications_title">Notifications</string>
     <string name="notifications_empty">No new notifications</string>
+    <string name="notifications_mark_all_read">Mark all read</string>
     <string name="notifications_follow_title">New follower</string>
     <string name="notifications_follow_message">Arman started following you</string>
     <string name="notifications_playlist_title">Playlist updated</string>

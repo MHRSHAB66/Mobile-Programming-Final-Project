@@ -7,20 +7,24 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Message
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.DownloadDone
@@ -35,16 +39,20 @@ import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -78,7 +86,9 @@ import com.example.project.core.util.asTrackTime
 import com.example.project.data.player.AudioSessionHolder
 import com.example.project.domain.model.Conversation
 import com.example.project.domain.model.RepeatMode
+import com.example.project.ui.components.CircleImage
 import com.example.project.ui.components.CoverImage
+import com.example.project.ui.components.EmptyState
 import com.example.project.ui.components.LikeButton
 import com.example.project.ui.components.bounceClick
 import com.example.project.ui.components.rememberAnimatedBrandGradient
@@ -192,28 +202,33 @@ fun NowPlayingScreen(
 
             Spacer(Modifier.height(dimens.spaceL))
 
-            Box(contentAlignment = Alignment.Center) {
-                // Soft, pulsing halo in the cover's dominant colour while playing.
+            // Outer box always reserves the larger (halo) size so pause/play does not
+            // shrink the cover area and shove the visualizer + title up/down.
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxWidth(0.84f)
+                    .aspectRatio(1f),
+            ) {
                 if (state.isPlaying) {
                     val pulse = rememberPulse()
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.84f)
-                            .aspectRatio(1f)
+                            .fillMaxSize()
                             .scale(pulse)
                             .background(
                                 Brush.radialGradient(
                                     listOf(dominant.copy(alpha = 0.55f), Color.Transparent)
                                 ),
                                 CircleShape,
-                            )
+                            ),
                     )
                 }
                 RotatingDisc(
                     coverUrl = song?.coverImageUrl,
                     isPlaying = state.isPlaying,
                     modifier = Modifier
-                        .fillMaxWidth(0.72f)
+                        .fillMaxWidth(0.72f / 0.84f)
                         .aspectRatio(1f)
                         .playerCoverSharedBounds(animatedVisibilityScope),
                 )
@@ -601,43 +616,125 @@ private fun SpeedControl(speed: Float, onSelect: (Float) -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ShareDialog(
     conversations: List<Conversation>,
     onDismiss: () -> Unit,
     onShare: (String) -> Unit,
 ) {
-    AlertDialog(
+    val dimens = LocalDimens.current
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.cd_share_to_chat)) },
-        text = {
-            LazyColumn {
-                items(conversations, key = { it.id }) { conversation ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.small)
-                            .bounceClick(onClick = { onShare(conversation.id) })
-                            .padding(vertical = 12.dp, horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text(
-                            text = conversation.peer.displayName,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Text(
-                            text = stringResource(R.string.cd_send),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = dimens.spaceXl),
+        ) {
+            Text(
+                text = stringResource(R.string.share_song_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(horizontal = dimens.spaceL),
+            )
+            Text(
+                text = stringResource(R.string.share_song_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(
+                    horizontal = dimens.spaceL,
+                    vertical = dimens.spaceXs,
+                ),
+            )
+
+            if (conversations.isEmpty()) {
+                EmptyState(
+                    icon = Icons.AutoMirrored.Filled.Message,
+                    message = stringResource(R.string.share_no_friends),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = dimens.spaceXl),
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp),
+                    contentPadding = PaddingValues(vertical = dimens.spaceS),
+                ) {
+                    items(conversations, key = { it.id }) { conversation ->
+                        ShareFriendRow(
+                            conversation = conversation,
+                            onShare = { onShare(conversation.id) },
                         )
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-        },
-    )
+        }
+    }
+}
+
+@Composable
+private fun ShareFriendRow(
+    conversation: Conversation,
+    onShare: () -> Unit,
+) {
+    val dimens = LocalDimens.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .bounceClick(onClick = onShare)
+            .padding(horizontal = dimens.spaceL, vertical = dimens.spaceM),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box {
+            CircleImage(
+                url = conversation.peer.avatarUrl,
+                contentDescription = conversation.peer.displayName,
+                sizeDp = 48,
+            )
+            if (conversation.peer.isOnline) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .size(12.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface)
+                        .padding(2.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF1DB954)),
+                )
+            }
+        }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = dimens.spaceM),
+        ) {
+            Text(
+                text = conversation.peer.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = conversation.peer.handle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        TextButton(onClick = onShare) {
+            Text(stringResource(R.string.share_send))
+        }
+    }
 }

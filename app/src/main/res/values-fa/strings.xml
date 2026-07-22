@@ -141,6 +141,10 @@
     <string name="cd_like">پسندیدن</string>
     <string name="cd_unlike">حذف پسند</string>
     <string name="cd_share_to_chat">ارسال برای دوست</string>
+    <string name="share_song_title">اشتراک‌گذاری آهنگ</string>
+    <string name="share_song_subtitle">این قطعه را در گفتگو بفرست</string>
+    <string name="share_no_friends">ابتدا با کسی گفتگو شروع کنید تا بتوانید آهنگ بفرستید</string>
+    <string name="share_send">ارسال</string>
     <string name="sleep_timer_set">تایمر خواب تنظیم شد</string>
     <string name="sleep_timer_cancelled">تایمر خواب لغو شد</string>
 
@@ -183,6 +187,7 @@
     <!-- Notifications screen -->
     <string name="notifications_title">اعلان‌ها</string>
     <string name="notifications_empty">اعلان جدیدی نیست</string>
+    <string name="notifications_mark_all_read">خواندن همه</string>
     <string name="notifications_follow_title">دنبال‌کننده جدید</string>
     <string name="notifications_follow_message">آرمان شما را دنبال کرد</string>
     <string name="notifications_playlist_title">به‌روزرسانی پلی‌لیست</string>
