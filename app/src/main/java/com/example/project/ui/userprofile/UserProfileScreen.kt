@@ -1,6 +1,8 @@
 package com.example.project.ui.userprofile
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,6 +38,7 @@ fun UserProfileScreen(
     onBack: () -> Unit,
     onOpenPlaylist: (String) -> Unit,
     onOpenConnections: (String, String) -> Unit,
+    onOpenChat: (String) -> Unit,
     viewModel: UserProfileViewModel = koinViewModel(parameters = { parametersOf(userId) }),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -88,16 +91,31 @@ fun UserProfileScreen(
                             onClick = { onOpenConnections(userId, "following") },
                         )
                     }
-                    if (user?.isFollowed == true) {
-                        OutlinedButton(
-                            onClick = viewModel::toggleFollow,
-                            modifier = Modifier.padding(top = dimens.spaceM),
-                        ) { Text(stringResource(R.string.following)) }
-                    } else {
-                        Button(
-                            onClick = viewModel::toggleFollow,
-                            modifier = Modifier.padding(top = dimens.spaceM),
-                        ) { Text(stringResource(R.string.follow)) }
+                    if (!state.isSelf) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = dimens.spaceM),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (user?.isFollowed == true) {
+                                OutlinedButton(onClick = viewModel::toggleFollow) {
+                                    Text(stringResource(R.string.following))
+                                }
+                            } else {
+                                Button(onClick = viewModel::toggleFollow) {
+                                    Text(stringResource(R.string.follow))
+                                }
+                            }
+                            Spacer(Modifier.width(dimens.spaceS))
+                            OutlinedButton(
+                                onClick = { viewModel.openMessage(onOpenChat) },
+                                enabled = !state.isOpeningChat,
+                            ) {
+                                Text(stringResource(R.string.profile_message_user))
+                            }
+                        }
                     }
                 }
             }

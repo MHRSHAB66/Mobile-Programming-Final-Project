@@ -96,6 +96,7 @@
     <string name="profile_public_playlists">پلی‌لیست‌های عمومی</string>
     <string name="profile_settings">تنظیمات</string>
     <string name="profile_messages">پیام‌ها</string>
+    <string name="profile_message_user">پیام</string>
     <string name="upgrade_in_progress">در حال فعال‌سازی اشتراک ویژه…</string>
     <string name="upgrade_success">به اشتراک ویژه خوش آمدید! دانلود آفلاین فعال شد.</string>
     <string name="upgrade_failed">ارتقا انجام نشد. دوباره تلاش کنید.</string>

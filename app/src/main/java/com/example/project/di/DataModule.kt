@@ -15,8 +15,9 @@ import com.example.project.data.remote.api.SocialApi
 import com.example.project.data.remote.api.TokenProvider
 import com.example.project.data.remote.music.MelodifyCatalogDataSource
 import com.example.project.data.remote.music.RemoteMusicDataSource
+import com.example.project.data.remote.api.ChatApi
 import com.example.project.data.remote.socket.ChatSocket
-import com.example.project.data.remote.socket.FakeChatSocket
+import com.example.project.data.remote.socket.MelodifyChatSocket
 import com.example.project.data.repository.AuthRepositoryImpl
 import com.example.project.data.repository.ChatRepositoryImpl
 import com.example.project.data.repository.DownloadRepositoryImpl
@@ -73,6 +74,9 @@ val dataModule = module {
                     runCatching {
                         GlobalContext.get().get<SocialRepository>().clearSocialCache()
                     }
+                    runCatching {
+                        GlobalContext.get().get<ChatRepository>().clearChatCache()
+                    }
                     settingsRepository.logout()
                 }
             }
@@ -113,8 +117,6 @@ val dataModule = module {
     single<CatalogApi> { get<Retrofit>().create(CatalogApi::class.java) }
     single<SocialApi> { get<Retrofit>().create(SocialApi::class.java) }
     single<SocialRepository> { SocialRepositoryImpl(get(), get(), get(), get()) }
-    single<AuthRepository> { AuthRepositoryImpl(get(), get(), get(), get()) }
-    single<ProfileRepository> { ProfileRepositoryImpl(androidContext(), get(), get()) }
 
     single {
         Room.databaseBuilder(androidContext(), AppDatabase::class.java, AppDatabase.NAME)
@@ -127,9 +129,15 @@ val dataModule = module {
     single { get<AppDatabase>().searchHistoryDao() }
     single { get<AppDatabase>().chatMessageDao() }
 
+    single<ChatApi> { get<Retrofit>().create(ChatApi::class.java) }
+    single<ChatSocket> { MelodifyChatSocket(get(), get(), get(), get()) }
+    single<ChatRepository> { ChatRepositoryImpl(get(), get(), get(), get(), get(), get()) }
+
+    single<AuthRepository> { AuthRepositoryImpl(get(), get(), get(), get(), get()) }
+    single<ProfileRepository> { ProfileRepositoryImpl(androidContext(), get(), get()) }
+
     single<RemoteMusicDataSource> { MelodifyCatalogDataSource(get()) }
 
-    single<ChatSocket> { FakeChatSocket(get()) }
     single<PlayerController> { PlayerControllerImpl(androidContext()) }
 
     single<MusicRepository> { MusicRepositoryImpl(get(), get(), get(), get()) }
@@ -137,5 +145,4 @@ val dataModule = module {
     single<PlaylistRepository> { PlaylistRepositoryImpl(get(), get()) }
     single<SearchRepository> { SearchRepositoryImpl(get(), get(), get()) }
     single<DownloadRepository> { DownloadRepositoryImpl(androidContext(), get(), get()) }
-    single<ChatRepository> { ChatRepositoryImpl(get(), get(), get()) }
 }
