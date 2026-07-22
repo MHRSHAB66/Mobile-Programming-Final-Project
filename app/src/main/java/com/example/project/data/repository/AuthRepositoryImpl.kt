@@ -9,6 +9,7 @@ import com.example.project.data.remote.api.dto.TokenResponseDto
 import com.example.project.data.remote.api.toAuthException
 import com.example.project.domain.repository.AuthRepository
 import com.example.project.domain.repository.ChatRepository
+import com.example.project.domain.repository.LibraryRepository
 import com.example.project.domain.repository.SettingsRepository
 import com.example.project.domain.repository.SocialRepository
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +21,7 @@ class AuthRepositoryImpl(
     private val tokenProvider: TokenProvider,
     private val socialRepository: SocialRepository,
     private val chatRepository: ChatRepository,
+    private val libraryRepository: LibraryRepository,
 ) : AuthRepository {
 
     override suspend fun login(handle: String, password: String): Result<Unit> =
@@ -58,12 +60,14 @@ class AuthRepositoryImpl(
             tokenProvider.setToken(null)
             socialRepository.clearSocialCache()
             chatRepository.clearChatCache()
+            libraryRepository.clearLikesCache()
             settingsRepository.logout()
         }
     }
 
     private suspend fun persistSession(response: TokenResponseDto) {
         socialRepository.clearSocialCache()
+        libraryRepository.clearLikesCache()
         tokenProvider.setToken(response.accessToken)
         val user = response.user
         settingsRepository.saveSession(
@@ -75,6 +79,7 @@ class AuthRepositoryImpl(
             accessToken = response.accessToken,
         )
         socialRepository.refreshFollowing()
+        libraryRepository.refreshLikes()
         chatRepository.connect()
     }
 }

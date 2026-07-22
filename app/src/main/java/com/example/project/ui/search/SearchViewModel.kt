@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.project.domain.model.SearchFilter
 import com.example.project.domain.model.SearchResults
+import com.example.project.domain.repository.LibraryRepository
 import com.example.project.domain.repository.SearchRepository
 import com.example.project.domain.usecase.SearchUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,13 +32,13 @@ data class SearchUiState(
 class SearchViewModel(
     private val searchUseCase: SearchUseCase,
     private val searchRepository: SearchRepository,
+    libraryRepository: LibraryRepository,
 ) : ViewModel() {
 
     private val query = MutableStateFlow("")
     private val filter = MutableStateFlow(SearchFilter.SONG)
     private val isSearching = MutableStateFlow(false)
 
-    // Debounced live search: filtering/requests do NOT run on every keystroke.
     private val resultsFlow = combine(query, filter) { q, f -> q to f }
         .debounce(350)
         .distinctUntilChanged()
@@ -48,7 +49,7 @@ class SearchViewModel(
             r
         }
 
-    val uiState: StateFlow<SearchUiState> = combine(
+    private val baseState = combine(
         query, filter, resultsFlow, searchRepository.observeHistory(), isSearching
     ) { q, f, results, history, searching ->
         SearchUiState(
@@ -57,6 +58,17 @@ class SearchViewModel(
             isSearching = searching,
             results = results,
             history = history,
+        )
+    }
+
+    val uiState: StateFlow<SearchUiState> = combine(
+        baseState,
+        libraryRepository.observeLikedIds(),
+    ) { state, likedIds ->
+        state.copy(
+            results = state.results.copy(
+                songs = state.results.songs.map { it.copy(isLiked = it.id in likedIds) },
+            ),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SearchUiState())
 
