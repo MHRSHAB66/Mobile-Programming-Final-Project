@@ -23,8 +23,14 @@ interface LikedSongDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: LikedSongEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(entities: List<LikedSongEntity>)
+
     @Query("DELETE FROM liked_songs WHERE songId = :songId")
     suspend fun delete(songId: String)
+
+    @Query("DELETE FROM liked_songs")
+    suspend fun deleteAll()
 }
 
 @Dao

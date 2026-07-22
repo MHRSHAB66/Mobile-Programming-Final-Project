@@ -15,6 +15,7 @@ import com.example.project.data.remote.api.SocialApi
 import com.example.project.data.remote.api.TokenProvider
 import com.example.project.data.remote.music.MelodifyCatalogDataSource
 import com.example.project.data.remote.music.RemoteMusicDataSource
+import com.example.project.data.remote.api.LibraryApi
 import com.example.project.data.remote.api.ChatApi
 import com.example.project.data.remote.socket.ChatSocket
 import com.example.project.data.remote.socket.MelodifyChatSocket
@@ -77,6 +78,9 @@ val dataModule = module {
                     runCatching {
                         GlobalContext.get().get<ChatRepository>().clearChatCache()
                     }
+                    runCatching {
+                        GlobalContext.get().get<LibraryRepository>().clearLikesCache()
+                    }
                     settingsRepository.logout()
                 }
             }
@@ -130,10 +134,12 @@ val dataModule = module {
     single { get<AppDatabase>().chatMessageDao() }
 
     single<ChatApi> { get<Retrofit>().create(ChatApi::class.java) }
+    single<LibraryApi> { get<Retrofit>().create(LibraryApi::class.java) }
+    single<LibraryRepository> { LibraryRepositoryImpl(get(), get(), get(), get()) }
     single<ChatSocket> { MelodifyChatSocket(get(), get(), get(), get()) }
     single<ChatRepository> { ChatRepositoryImpl(get(), get(), get(), get(), get(), get()) }
 
-    single<AuthRepository> { AuthRepositoryImpl(get(), get(), get(), get(), get()) }
+    single<AuthRepository> { AuthRepositoryImpl(get(), get(), get(), get(), get(), get()) }
     single<ProfileRepository> { ProfileRepositoryImpl(androidContext(), get(), get()) }
 
     single<RemoteMusicDataSource> { MelodifyCatalogDataSource(get()) }
@@ -141,7 +147,6 @@ val dataModule = module {
     single<PlayerController> { PlayerControllerImpl(androidContext()) }
 
     single<MusicRepository> { MusicRepositoryImpl(get(), get(), get(), get()) }
-    single<LibraryRepository> { LibraryRepositoryImpl(get(), get()) }
     single<PlaylistRepository> { PlaylistRepositoryImpl(get(), get()) }
     single<SearchRepository> { SearchRepositoryImpl(get(), get(), get()) }
     single<DownloadRepository> { DownloadRepositoryImpl(androidContext(), get(), get()) }

@@ -38,7 +38,7 @@ fun LikeButton(
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
     iconSize: Dp = 24.dp,
-    likedTint: Color = MaterialTheme.colorScheme.primary,
+    likedTint: Color = Color(0xFFE53935),
     unlikedTint: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
     var liked by remember { mutableStateOf(isLiked) }
