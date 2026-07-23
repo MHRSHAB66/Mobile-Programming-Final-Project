@@ -26,6 +26,9 @@ interface MusicRepository {
     /** Spec §3 — long artist track lists use Paging 3. */
     fun getArtistSongsPaged(artistId: String): Flow<PagingData<Song>>
 
+    /** Keeps Room / home lists in sync after a local follow/unfollow. */
+    suspend fun updateCachedArtistFollowers(artistId: String, followers: Int)
+
     /** Emits whenever liked/download state changes so lists can re-decorate songs. */
     fun observeLibrarySignals(): Flow<Unit>
 }
