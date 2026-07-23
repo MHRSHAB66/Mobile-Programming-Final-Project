@@ -61,8 +61,8 @@ fun MiniPlayer(
             .padding(horizontal = dimens.spaceS),
         color = MaterialTheme.colorScheme.secondaryContainer,
         shape = MaterialTheme.shapes.medium,
-        tonalElevation = 3.dp,
-        shadowElevation = 6.dp,
+        tonalElevation = 4.dp,
+        shadowElevation = 12.dp,
     ) {
         Column {
             Row(

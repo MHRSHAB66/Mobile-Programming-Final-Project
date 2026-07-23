@@ -1,5 +1,7 @@
 package com.example.project.ui.navigation
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -7,11 +9,14 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
@@ -31,7 +36,12 @@ fun BottomBar(
             fontScale = systemFontScale,
         )
     ) {
-        NavigationBar {
+        Column(modifier = Modifier.shadow(elevation = 16.dp)) {
+            HorizontalDivider(
+                thickness = 0.5.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+            )
+            NavigationBar {
             TopLevelTab.entries.forEach { tab ->
                 val selected = currentRoute == tab.route
                 val label = stringResource(tab.labelRes)
@@ -63,6 +73,7 @@ fun BottomBar(
                     alwaysShowLabel = true,
                 )
             }
+        }
         }
     }
 }
