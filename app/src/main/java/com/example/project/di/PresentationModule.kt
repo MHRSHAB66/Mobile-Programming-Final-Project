@@ -6,10 +6,13 @@ import com.example.project.ui.auth.AuthViewModel
 import com.example.project.ui.chat.ChatDetailViewModel
 import com.example.project.ui.chat.ChatListViewModel
 import com.example.project.ui.downloads.DownloadsViewModel
+import com.example.project.ui.followed.ConnectionsViewModel
+import com.example.project.ui.followed.FollowedArtistsViewModel
 import com.example.project.ui.followed.FollowedViewModel
 import com.example.project.ui.home.HomeViewModel
 import com.example.project.ui.library.LikedSongsViewModel
 import com.example.project.ui.library.RecentlyPlayedViewModel
+import com.example.project.ui.notifications.NotificationsViewModel
 import com.example.project.ui.player.PlayerViewModel
 import com.example.project.ui.playlistdetail.PlaylistDetailViewModel
 import com.example.project.ui.playlists.PlaylistsViewModel
@@ -22,7 +25,7 @@ import org.koin.dsl.module
 
 /** Presentation layer: all ViewModels. */
 val presentationModule = module {
-    viewModel { AuthViewModel(get(), get()) }
+    viewModel { AuthViewModel(get()) }
     viewModel { MainViewModel(get(), get()) }
     viewModel { PlayerViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { HomeViewModel(get(), get()) }
@@ -34,11 +37,14 @@ val presentationModule = module {
     viewModel { LikedSongsViewModel(get()) }
     viewModel { RecentlyPlayedViewModel(get()) }
     viewModel { FollowedViewModel(get()) }
+    viewModel { FollowedArtistsViewModel(get(), get()) }
+    viewModel { (userId: String, mode: String) -> ConnectionsViewModel(userId, mode, get()) }
     viewModel { ChatListViewModel(get()) }
+    viewModel { NotificationsViewModel(get()) }
 
     // Parameterised ViewModels (receive a route argument via parametersOf).
     viewModel { (playlistId: String) -> PlaylistDetailViewModel(playlistId, get(), get()) }
-    viewModel { (artistId: String) -> ArtistViewModel(artistId, get(), get()) }
-    viewModel { (userId: String) -> UserProfileViewModel(userId, get(), get()) }
+    viewModel { (artistId: String) -> ArtistViewModel(artistId, get(), get(), get()) }
+    viewModel { (userId: String) -> UserProfileViewModel(userId, get(), get(), get(), get()) }
     viewModel { (conversationId: String) -> ChatDetailViewModel(conversationId, get()) }
 }

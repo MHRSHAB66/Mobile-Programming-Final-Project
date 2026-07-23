@@ -43,11 +43,12 @@
     <string name="home_quick_liked">آهنگ‌های پسندیده</string>
     <string name="home_quick_recent">اخیراً شنیده‌شده</string>
     <string name="home_quick_playlists">پلی‌لیست‌های من</string>
-    <string name="home_quick_artists">هنرمندان برتر</string>
+    <string name="home_quick_artists">هنرمندان من</string>
     <string name="home_section_popular">محبوب‌ترین‌ها</string>
     <string name="home_section_new">جدیدترین‌ها</string>
     <string name="home_section_global">پلی‌لیست‌های جهانی</string>
     <string name="home_section_local">پلی‌لیست‌های محلی</string>
+    <string name="home_section_artists">هنرمندان برتر</string>
 
     <!-- Search -->
     <string name="search_hint">آهنگ، خواننده، پلی‌لیست یا کاربر…</string>
@@ -95,6 +96,7 @@
     <string name="profile_public_playlists">پلی‌لیست‌های عمومی</string>
     <string name="profile_settings">تنظیمات</string>
     <string name="profile_messages">پیام‌ها</string>
+    <string name="profile_message_user">پیام</string>
     <string name="upgrade_in_progress">در حال فعال‌سازی اشتراک ویژه…</string>
     <string name="upgrade_success">به اشتراک ویژه خوش آمدید! دانلود آفلاین فعال شد.</string>
     <string name="upgrade_failed">ارتقا انجام نشد. دوباره تلاش کنید.</string>
@@ -139,6 +141,10 @@
     <string name="cd_like">پسندیدن</string>
     <string name="cd_unlike">حذف پسند</string>
     <string name="cd_share_to_chat">ارسال برای دوست</string>
+    <string name="share_song_title">اشتراک‌گذاری آهنگ</string>
+    <string name="share_song_subtitle">این قطعه را در گفتگو بفرست</string>
+    <string name="share_no_friends">ابتدا با کسی گفتگو شروع کنید تا بتوانید آهنگ بفرستید</string>
+    <string name="share_send">ارسال</string>
     <string name="sleep_timer_set">تایمر خواب تنظیم شد</string>
     <string name="sleep_timer_cancelled">تایمر خواب لغو شد</string>
 
@@ -155,6 +161,8 @@
     <string name="artist_title">هنرمند</string>
     <string name="followed_title">دنبال‌شده‌ها</string>
     <string name="followed_empty">هنوز کسی را دنبال نمی‌کنید</string>
+    <string name="followed_artists_title">هنرمندان دنبال‌شده</string>
+    <string name="followed_artists_empty">هنوز هیچ هنرمندی را دنبال نمی‌کنید</string>
     <string name="top_songs">محبوب</string>
     <string name="user_unfollowed">لغو دنبال کردن انجام شد</string>
     <string name="user_followed">دنبال شد</string>
@@ -179,6 +187,19 @@
     <!-- Notifications screen -->
     <string name="notifications_title">اعلان‌ها</string>
     <string name="notifications_empty">اعلان جدیدی نیست</string>
+    <string name="notifications_mark_all_read">خواندن همه</string>
+    <string name="notifications_follow_title">دنبال‌کننده جدید</string>
+    <string name="notifications_follow_message">آرمان شما را دنبال کرد</string>
+    <string name="notifications_playlist_title">به‌روزرسانی پلی‌لیست</string>
+    <string name="notifications_playlist_message">آهنگ‌های جدیدی به «شب‌های آرام» اضافه شد</string>
+    <string name="notifications_download_title">دانلود کامل شد</string>
+    <string name="notifications_download_message">«رانندگی نیمه‌شب» برای پخش آفلاین آماده است</string>
+    <string name="notifications_release_title">انتشار جدید</string>
+    <string name="notifications_release_message">آهنگ جدید لاله منتشر شده است</string>
+    <string name="notifications_time_two_minutes">۲ دقیقه پیش</string>
+    <string name="notifications_time_one_hour">۱ ساعت پیش</string>
+    <string name="notifications_time_three_hours">۳ ساعت پیش</string>
+    <string name="notifications_time_yesterday">دیروز</string>
 
     <!-- Media notification channel -->
     <string name="playback_channel_name">پخش موسیقی</string>

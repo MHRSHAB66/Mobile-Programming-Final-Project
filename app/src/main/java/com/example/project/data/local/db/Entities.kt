@@ -73,3 +73,50 @@ data class ChatMessageEntity(
     val sharedSongArtist: String?,
     val sharedSongCover: String?,
 )
+
+/** Last successful catalogue song fetch — used when the network is unavailable. */
+@Entity(tableName = "cached_songs")
+data class CachedSongEntity(
+    @PrimaryKey val id: String,
+    val title: String,
+    val artistId: String,
+    val artistName: String,
+    val album: String,
+    val coverImageUrl: String,
+    val audioUrl: String,
+    val durationMs: Long,
+    val genre: String,
+    val popularity: Int = 0,
+    val cachedAt: Long,
+)
+
+@Entity(tableName = "cached_artists")
+data class CachedArtistEntity(
+    @PrimaryKey val id: String,
+    val name: String,
+    val imageUrl: String,
+    val followers: Int,
+    val bio: String,
+    val cachedAt: Long,
+)
+
+@Entity(tableName = "cached_playlists")
+data class CachedPlaylistEntity(
+    @PrimaryKey val id: String,
+    val title: String,
+    val description: String,
+    val coverImageUrl: String,
+    val type: String,
+    val isPublic: Boolean,
+    val cachedAt: Long,
+)
+
+@Entity(
+    tableName = "cached_playlist_songs",
+    primaryKeys = ["playlistId", "songId"],
+)
+data class CachedPlaylistSongEntity(
+    val playlistId: String,
+    val songId: String,
+    val position: Int,
+)

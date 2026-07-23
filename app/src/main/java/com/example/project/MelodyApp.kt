@@ -4,6 +4,7 @@ import android.app.Application
 import com.example.project.data.remote.api.TokenProvider
 import com.example.project.di.appKoinModules
 import com.example.project.domain.repository.ChatRepository
+import com.example.project.domain.repository.LibraryRepository
 import com.example.project.domain.repository.ProfileRepository
 import com.example.project.domain.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
@@ -17,6 +18,7 @@ import org.koin.core.logger.Level
 class MelodyApp : Application() {
 
     private val chatRepository: ChatRepository by inject()
+    private val libraryRepository: LibraryRepository by inject()
     private val settingsRepository: SettingsRepository by inject()
     private val profileRepository: ProfileRepository by inject()
     private val tokenProvider: TokenProvider by inject()
@@ -32,6 +34,7 @@ class MelodyApp : Application() {
         appScope.launch {
             tokenProvider.setToken(settingsRepository.restoreAccessToken())
             profileRepository.refreshProfile()
+            libraryRepository.refreshLikes()
             chatRepository.connect()
         }
     }

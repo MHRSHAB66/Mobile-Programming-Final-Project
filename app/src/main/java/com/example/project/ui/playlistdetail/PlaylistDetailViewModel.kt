@@ -43,6 +43,7 @@ class PlaylistDetailViewModel(
 
     private fun load() {
         viewModelScope.launch {
+            // Populates Room when online; Room paging still works offline afterwards.
             _header.value = playlistRepository.getPlaylist(playlistId)
             _songs.value = playlistRepository.getPlaylistSongs(playlistId)
         }

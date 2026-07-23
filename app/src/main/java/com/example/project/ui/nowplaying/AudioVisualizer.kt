@@ -178,8 +178,10 @@ private fun SyntheticVisualizer(
         animationSpec = infiniteRepeatable(tween(1700, easing = LinearEasing)),
         label = "phase3",
     )
+    // Pause keeps a calm mid-height silhouette (not near-zero) so the bars don't
+    // look like they collapse into the title.
     val amplitude by animateFloatAsState(
-        targetValue = if (isPlaying) 1f else 0.08f,
+        targetValue = if (isPlaying) 1f else 0.45f,
         animationSpec = tween(500),
         label = "amplitude",
     )
@@ -192,10 +194,10 @@ private fun SyntheticVisualizer(
             val mid = abs(sin(phase2 + i * 0.55f + 1.0f))
             val treble = abs(sin(phase3 + i * 0.85f + 2.3f))
             val combined = (0.50f * bass + 0.30f * mid + 0.20f * treble)
-            val height = (0.10f + 0.90f * combined) * size.height * amplitude
+            val height = (0.22f + 0.78f * combined) * size.height * amplitude
             val x = i * slot + (slot - barWidth) / 2f
             drawRoundRect(
-                color = color.copy(alpha = 0.55f + 0.45f * combined),
+                color = color.copy(alpha = 0.50f + 0.40f * combined * amplitude),
                 topLeft = Offset(x, (size.height - height) / 2f),
                 size = Size(barWidth, height),
                 cornerRadius = CornerRadius(barWidth / 2f, barWidth / 2f),

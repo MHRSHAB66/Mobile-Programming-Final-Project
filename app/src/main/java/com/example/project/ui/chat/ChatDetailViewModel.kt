@@ -19,8 +19,8 @@ class ChatDetailViewModel(
     private val chatRepository: ChatRepository,
 ) : ViewModel() {
 
-    // Offline-first, Paging-ready message history (newest first; rendered reversed).
-    val messages: Flow<PagingData<ChatMessage>> =
+    /** Newest-first pages for reverseLayout LazyColumn; Room invalidates on status/new rows. */
+    val pagedMessages: Flow<PagingData<ChatMessage>> =
         chatRepository.observeMessagesPaged(conversationId).cachedIn(viewModelScope)
 
     val isPeerTyping: StateFlow<Boolean> = chatRepository.observeTyping(conversationId)
@@ -31,8 +31,10 @@ class ChatDetailViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     init {
+        chatRepository.setActiveConversation(conversationId)
         viewModelScope.launch {
             chatRepository.connect()
+            chatRepository.syncMessages(conversationId)
             chatRepository.markConversationRead(conversationId)
         }
     }
@@ -45,5 +47,10 @@ class ChatDetailViewModel(
 
     fun onTyping() {
         viewModelScope.launch { chatRepository.notifyTyping(conversationId) }
+    }
+
+    override fun onCleared() {
+        chatRepository.setActiveConversation(null)
+        super.onCleared()
     }
 }

@@ -66,4 +66,11 @@ object ApiConfig {
         // Re-run so /media/ paths get encoding after host swap.
         return rewriteUrl(rewritten)
     }
+
+    fun webSocketChatUrl(token: String): String {
+        val base = BASE_URL.trimEnd('/')
+            .replace("https://", "wss://")
+            .replace("http://", "ws://")
+        return "$base/ws/chat?token=${Uri.encode(token)}"
+    }
 }

@@ -1,16 +1,17 @@
 package com.example.project.ui.chat
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -30,6 +31,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,7 +54,6 @@ import com.example.project.ui.components.bounceClick
 import com.example.project.ui.theme.LocalDimens
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
-import androidx.compose.foundation.layout.navigationBarsPadding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,9 +66,18 @@ fun ChatDetailScreen(
 ) {
     val peer by viewModel.peer.collectAsStateWithLifecycle()
     val isTyping by viewModel.isPeerTyping.collectAsStateWithLifecycle()
-    val messages = viewModel.messages.collectAsLazyPagingItems()
+    val pagingItems = viewModel.pagedMessages.collectAsLazyPagingItems()
     val dimens = LocalDimens.current
     var input by remember { mutableStateOf("") }
+    val listState = rememberLazyListState()
+
+    // reverseLayout: index 0 is the newest bubble (visual bottom). Keep it pinned above the input.
+    val newestId = if (pagingItems.itemCount > 0) pagingItems.peek(0)?.id else null
+    LaunchedEffect(newestId, isTyping, pagingItems.itemCount) {
+        if (pagingItems.itemCount > 0 || isTyping) {
+            listState.animateScrollToItem(0)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -94,47 +104,47 @@ fun ChatDetailScreen(
                 },
             )
         },
-        bottomBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding(),
-            ) {
-                contentAboveInput?.invoke()
-
-                MessageInput(
-                    value = input,
-                    onValueChange = {
-                        input = it
-                        viewModel.onTyping()
-                    },
-                    onSend = {
-                        viewModel.send(input)
-                        input = ""
-                    },
-                )
-            }
-        },
     ) { padding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding),
-            reverseLayout = true,
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(dimens.spaceM),
-            verticalArrangement = Arrangement.spacedBy(dimens.spaceS),
+                .padding(padding)
+                .imePadding(),
         ) {
-            if (isTyping) {
-                item { TypingBubble() }
-            }
-            items(
-                count = messages.itemCount,
-                key = messages.itemKey { it.id },
-            ) { index ->
-                messages[index]?.let { message ->
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                state = listState,
+                reverseLayout = true,
+                contentPadding = PaddingValues(dimens.spaceM),
+                verticalArrangement = Arrangement.spacedBy(dimens.spaceS),
+            ) {
+                if (isTyping) {
+                    item(key = "typing") { TypingBubble() }
+                }
+                items(
+                    count = pagingItems.itemCount,
+                    key = pagingItems.itemKey { it.id },
+                ) { index ->
+                    val message = pagingItems[index] ?: return@items
                     MessageBubble(message = message, onPlaySharedSong = onPlaySharedSong)
                 }
             }
+
+            contentAboveInput?.invoke()
+
+            MessageInput(
+                value = input,
+                onValueChange = {
+                    input = it
+                    if (it.isNotBlank()) viewModel.onTyping()
+                },
+                onSend = {
+                    viewModel.send(input)
+                    input = ""
+                },
+            )
         }
     }
 }

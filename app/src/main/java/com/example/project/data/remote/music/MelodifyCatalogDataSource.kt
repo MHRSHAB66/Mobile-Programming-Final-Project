@@ -9,8 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Melodify FastAPI catalogue. On any failure returns empty lists so
- * [com.example.project.data.repository.MusicRepositoryImpl] can fall back to mock data.
+ * Melodify FastAPI catalogue. On any failure returns empty lists so the UI can show
+ * empty states until connectivity returns.
  */
 class MelodifyCatalogDataSource(
     private val catalogApi: CatalogApi,
@@ -26,5 +26,9 @@ class MelodifyCatalogDataSource(
         runCatching {
             catalogApi.getArtists(page = 1, limit = 200).items.map { it.toDomainArtist() }
         }.getOrDefault(emptyList())
+    }
+
+    override suspend fun getArtist(id: String): Artist? = withContext(Dispatchers.IO) {
+        runCatching { catalogApi.getArtist(id).toDomainArtist() }.getOrNull()
     }
 }

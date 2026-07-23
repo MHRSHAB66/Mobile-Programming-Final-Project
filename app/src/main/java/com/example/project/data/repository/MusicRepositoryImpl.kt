@@ -1,8 +1,17 @@
 package com.example.project.data.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
+import com.example.project.data.local.db.CatalogCacheDao
 import com.example.project.data.local.db.DownloadDao
 import com.example.project.data.local.db.LikedSongDao
-import com.example.project.data.mock.MockData
+import com.example.project.data.local.db.toArtist
+import com.example.project.data.local.db.toCachedEntity
+import com.example.project.data.local.db.toSong
+import com.example.project.data.remote.api.CatalogApi
+import com.example.project.data.remote.api.dto.toDomainSong
 import com.example.project.data.remote.music.RemoteMusicDataSource
 import com.example.project.domain.model.Artist
 import com.example.project.domain.model.Song
@@ -18,39 +27,41 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 /**
- * Catalogue repository. Pulls songs/artists from the injected [RemoteMusicDataSource]
- * (Jamendo when configured, otherwise the mock source) and caches them in memory. If the
- * remote source is empty or fails, it falls back to the bundled mock catalogue so the app
- * always has content. Each song is decorated with liked/download state from Room.
+ * Catalogue repository. Fetches from the Melodify API, writes successes into Room, and
+ * serves that local cache when the network is unavailable.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MusicRepositoryImpl(
     private val dataSource: RemoteMusicDataSource,
+    private val catalogApi: CatalogApi,
+    private val catalogCache: CatalogCacheDao,
     private val likedDao: LikedSongDao,
     private val downloadDao: DownloadDao,
     private val settingsRepository: SettingsRepository,
 ) : MusicRepository {
 
-    @Volatile
-    private var cachedSongs: List<Song>? = null
-
-    @Volatile
-    private var cachedArtists: List<Artist>? = null
-
     private suspend fun allSongs(): List<Song> {
-        cachedSongs?.let { return it }
-        val loaded = runCatching { dataSource.getSongs() }.getOrNull()
-            ?.takeIf { it.isNotEmpty() } ?: MockData.songs
-        cachedSongs = loaded
-        return loaded
+        val remote = runCatching { dataSource.getSongs() }.getOrNull()?.takeIf { it.isNotEmpty() }
+        if (remote != null) {
+            val now = System.currentTimeMillis()
+            catalogCache.upsertSongs(
+                remote.mapIndexed { index, song ->
+                    song.toCachedEntity(cachedAt = now, popularity = remote.size - index)
+                },
+            )
+            return remote
+        }
+        return catalogCache.getAllSongs().map { it.toSong() }
     }
 
     private suspend fun allArtists(): List<Artist> {
-        cachedArtists?.let { return it }
-        val loaded = runCatching { dataSource.getArtists() }.getOrNull()
-            ?.takeIf { it.isNotEmpty() } ?: MockData.artists
-        cachedArtists = loaded
-        return loaded
+        val remote = runCatching { dataSource.getArtists() }.getOrNull()?.takeIf { it.isNotEmpty() }
+        if (remote != null) {
+            val now = System.currentTimeMillis()
+            catalogCache.upsertArtists(remote.map { it.toCachedEntity(now) })
+            return remote
+        }
+        return catalogCache.getAllArtists().map { it.toArtist() }
     }
 
     private suspend fun decorate(songs: List<Song>): List<Song> {
@@ -84,7 +95,12 @@ class MusicRepositoryImpl(
     }
 
     override suspend fun getSong(id: String): Song? = withContext(Dispatchers.IO) {
-        allSongs().firstOrNull { it.id == id }?.let { decorate(listOf(it)).first() }
+        val remote = runCatching { catalogApi.getSong(id).toDomainSong() }.getOrNull()
+        if (remote != null) {
+            catalogCache.upsertSongs(listOf(remote.toCachedEntity(System.currentTimeMillis())))
+            return@withContext decorate(listOf(remote)).first()
+        }
+        catalogCache.getSong(id)?.toSong()?.let { decorate(listOf(it)).first() }
     }
 
     override suspend fun getSongsByIds(ids: List<String>): List<Song> = withContext(Dispatchers.IO) {
@@ -97,13 +113,36 @@ class MusicRepositoryImpl(
     }
 
     override suspend fun getArtist(id: String): Artist? = withContext(Dispatchers.IO) {
-        allArtists().firstOrNull { it.id == id }
+        val fresh = runCatching { dataSource.getArtist(id) }.getOrNull()
+        if (fresh != null) {
+            catalogCache.upsertArtists(listOf(fresh.toCachedEntity(System.currentTimeMillis())))
+            return@withContext fresh
+        }
+        catalogCache.getArtist(id)?.toArtist()
+            ?: allArtists().firstOrNull { it.id == id }
     }
 
     override suspend fun getArtistSongs(artistId: String): List<Song> = withContext(Dispatchers.IO) {
-        decorate(allSongs().filter { it.artistId == artistId })
+        val remote = runCatching {
+            catalogApi.getArtistSongs(artistId, page = 1, limit = 200).items.map { it.toDomainSong() }
+        }.getOrNull()?.takeIf { it.isNotEmpty() }
+        if (remote != null) {
+            val now = System.currentTimeMillis()
+            catalogCache.upsertSongs(
+                remote.mapIndexed { index, song ->
+                    song.toCachedEntity(cachedAt = now, popularity = remote.size - index)
+                },
+            )
+            return@withContext decorate(remote)
+        }
+        decorate(catalogCache.getSongsByArtist(artistId).map { it.toSong() })
     }
 
+    override fun getArtistSongsPaged(artistId: String): Flow<PagingData<Song>> =
+        Pager(
+            config = PagingConfig(pageSize = 30, enablePlaceholders = false),
+            pagingSourceFactory = { catalogCache.pagingSongsByArtist(artistId) },
+        ).flow.map { paging -> paging.map { it.toSong() } }
     override fun observeLibrarySignals(): Flow<Unit> =
         settingsRepository.settings.flatMapLatest { settings ->
             combine(likedDao.observeIds(), downloadDao.observeCompletedIds(settings.currentUserId)) { _, _ -> Unit }

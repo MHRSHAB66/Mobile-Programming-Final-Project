@@ -27,6 +27,7 @@ fun ArtistDto.toDomainArtist(): Artist = Artist(
     imageUrl = rewriteBackendUrl(imageUrl),
     followers = followers,
     bio = bio.orEmpty(),
+    isFollowed = isFollowed,
 )
 
 fun CatalogPlaylistDto.toDomainPlaylist(): Playlist = Playlist(

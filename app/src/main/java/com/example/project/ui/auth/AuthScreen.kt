@@ -219,14 +219,6 @@ fun AuthScreen(
                 }
             }
 
-            TextButton(
-                onClick = { viewModel.continueAsDemo() },
-                enabled = !uiState.isLoading,
-                modifier = Modifier.padding(top = dimens.spaceS),
-            ) {
-                Text(stringResource(R.string.auth_demo_button))
-            }
-
             Spacer(Modifier.height(dimens.spaceXl))
         }
     }

@@ -20,6 +20,8 @@ import com.example.project.ui.chat.ChatDetailScreen
 import com.example.project.ui.chat.ChatListScreen
 import com.example.project.ui.components.MiniPlayer
 import com.example.project.ui.downloads.DownloadsScreen
+import com.example.project.ui.followed.ConnectionsScreen
+import com.example.project.ui.followed.FollowedArtistsScreen
 import com.example.project.ui.followed.FollowedScreen
 import com.example.project.ui.home.HomeScreen
 import com.example.project.ui.library.LikedSongsScreen
@@ -67,6 +69,9 @@ fun AppNavHost(
     val openPlaylist: (String) -> Unit = { navController.navigate(Routes.playlistDetail(it)) }
     val openArtist: (String) -> Unit = { navController.navigate(Routes.artist(it)) }
     val openUser: (String) -> Unit = { navController.navigate(Routes.user(it)) }
+    val openConnections: (String, String) -> Unit = { userId, mode ->
+        navController.navigate(Routes.connections(userId, mode))
+    }
     val back: () -> Unit = { navController.popBackStack() }
 
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -95,7 +100,7 @@ fun AppNavHost(
                 onOpenLiked = { navController.navigate(Routes.LIKED) },
                 onOpenRecent = { navController.navigate(Routes.RECENT) },
                 onOpenPlaylistsTab = { navigateTab(Routes.PLAYLISTS) },
-                onOpenFollowed = { navController.navigate(Routes.FOLLOWED) },
+                onOpenFollowedArtists = { navController.navigate(Routes.FOLLOWED_ARTISTS) },
                 contentPadding = contentPadding,
             )
         }
@@ -132,6 +137,7 @@ fun AppNavHost(
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
                 onOpenChats = { navController.navigate(Routes.CHAT_LIST) },
                 onOpenFollowed = { navController.navigate(Routes.FOLLOWED) },
+                onOpenConnections = openConnections,
                 onOpenUser = openUser,
                 onOpenPlaylist = openPlaylist,
                 onShowMessage = onShowMessage,
@@ -153,6 +159,7 @@ fun AppNavHost(
             NowPlayingScreen(
                 playerViewModel = playerViewModel,
                 onBack = back,
+                onOpenArtist = openArtist,
                 animatedVisibilityScope = this,
             )
         }
@@ -177,6 +184,9 @@ fun AppNavHost(
         }
         composable(Routes.FOLLOWED) {
             FollowedScreen(onBack = back, onOpenUser = openUser)
+        }
+        composable(Routes.FOLLOWED_ARTISTS) {
+            FollowedArtistsScreen(onBack = back, onOpenArtist = openArtist)
         }
         composable(Routes.CHAT_LIST) {
             ChatListScreen(
@@ -218,7 +228,29 @@ fun AppNavHost(
             arguments = listOf(navArgument(Routes.Args.USER_ID) { type = NavType.StringType }),
         ) { entry ->
             val id = entry.arguments?.getString(Routes.Args.USER_ID).orEmpty()
-            UserProfileScreen(userId = id, onBack = back, onOpenPlaylist = openPlaylist)
+            UserProfileScreen(
+                userId = id,
+                onBack = back,
+                onOpenPlaylist = openPlaylist,
+                onOpenConnections = openConnections,
+                onOpenChat = { navController.navigate(Routes.chatDetail(it)) },
+            )
+        }
+        composable(
+            route = Routes.CONNECTIONS,
+            arguments = listOf(
+                navArgument(Routes.Args.USER_ID) { type = NavType.StringType },
+                navArgument(Routes.Args.MODE) { type = NavType.StringType },
+            ),
+        ) { entry ->
+            val userId = entry.arguments?.getString(Routes.Args.USER_ID).orEmpty()
+            val mode = entry.arguments?.getString(Routes.Args.MODE).orEmpty()
+            ConnectionsScreen(
+                userId = userId,
+                mode = mode,
+                onBack = back,
+                onOpenUser = openUser,
+            )
         }
         composable(
             route = Routes.CHAT_DETAIL,

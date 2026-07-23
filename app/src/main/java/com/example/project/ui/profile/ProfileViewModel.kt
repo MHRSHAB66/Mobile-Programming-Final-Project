@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -69,8 +71,14 @@ class ProfileViewModel(
 
     init {
         viewModelScope.launch {
-            profileRepository.refreshProfile()
-            loadPublicPlaylists()
+            settingsRepository.settings
+                .map { it.currentUserId }
+                .distinctUntilChanged()
+                .collect {
+                    socialRepository.refreshFollowing()
+                    profileRepository.refreshProfile()
+                    loadPublicPlaylists()
+                }
         }
     }
 
