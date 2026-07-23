@@ -4,10 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.project.R
 import com.example.project.core.util.UiText
-import com.example.project.data.mock.MockData
 import com.example.project.data.remote.api.AuthException
 import com.example.project.domain.repository.AuthRepository
-import com.example.project.domain.repository.SettingsRepository
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,12 +26,11 @@ sealed interface AuthEffect {
 }
 
 /**
- * Auth screen ViewModel (UDF). Login / register call the Melodify backend; demo sign-in stays
- * local for offline demos. Session flag in DataStore switches the app root to [MainScreen].
+ * Auth screen ViewModel (UDF). Login / register call the Melodify backend.
+ * Session flag in DataStore switches the app root to MainScreen.
  */
 class AuthViewModel(
     private val authRepository: AuthRepository,
-    private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AuthUiState())
@@ -77,20 +74,6 @@ class AuthViewModel(
             else -> submit {
                 authRepository.register(cleanName, cleanHandle, password)
             }
-        }
-    }
-
-    /** Offline demo path — does not hit the backend. */
-    fun continueAsDemo() {
-        if (_uiState.value.isLoading) return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            settingsRepository.login(
-                name = MockData.currentUser.displayName,
-                handle = MockData.currentUser.handle,
-                avatarUrl = MockData.currentUser.avatarUrl,
-            )
-            _uiState.update { it.copy(isLoading = false) }
         }
     }
 

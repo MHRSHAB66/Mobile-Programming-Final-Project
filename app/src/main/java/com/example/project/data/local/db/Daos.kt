@@ -143,3 +143,74 @@ interface ChatMessageDao {
     )
     suspend fun latestIncomingMessageId(conversationId: String): String?
 }
+
+@Dao
+interface CatalogCacheDao {
+    @Query("SELECT * FROM cached_songs ORDER BY popularity DESC, title COLLATE NOCASE ASC")
+    suspend fun getAllSongs(): List<CachedSongEntity>
+
+    @Query("SELECT * FROM cached_songs WHERE id = :id LIMIT 1")
+    suspend fun getSong(id: String): CachedSongEntity?
+
+    @Query("SELECT * FROM cached_songs WHERE artistId = :artistId ORDER BY popularity DESC")
+    suspend fun getSongsByArtist(artistId: String): List<CachedSongEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertSongs(songs: List<CachedSongEntity>)
+
+    @Query("DELETE FROM cached_songs")
+    suspend fun clearSongs()
+
+    @Query("SELECT * FROM cached_artists ORDER BY followers DESC")
+    suspend fun getAllArtists(): List<CachedArtistEntity>
+
+    @Query("SELECT * FROM cached_artists WHERE id = :id LIMIT 1")
+    suspend fun getArtist(id: String): CachedArtistEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertArtists(artists: List<CachedArtistEntity>)
+
+    @Query("DELETE FROM cached_artists")
+    suspend fun clearArtists()
+
+    @Query("SELECT * FROM cached_playlists ORDER BY title COLLATE NOCASE ASC")
+    suspend fun getAllPlaylists(): List<CachedPlaylistEntity>
+
+    @Query("SELECT * FROM cached_playlists WHERE id = :id LIMIT 1")
+    suspend fun getPlaylist(id: String): CachedPlaylistEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertPlaylists(playlists: List<CachedPlaylistEntity>)
+
+    @Query("DELETE FROM cached_playlists")
+    suspend fun clearPlaylists()
+
+    @Query(
+        """
+        SELECT s.* FROM cached_songs s
+        INNER JOIN cached_playlist_songs ps ON ps.songId = s.id
+        WHERE ps.playlistId = :playlistId
+        ORDER BY ps.position ASC
+        """,
+    )
+    suspend fun getPlaylistSongs(playlistId: String): List<CachedSongEntity>
+
+    @Query(
+        """
+        SELECT s.* FROM cached_songs s
+        INNER JOIN cached_playlist_songs ps ON ps.songId = s.id
+        WHERE ps.playlistId = :playlistId
+        ORDER BY ps.position ASC
+        """,
+    )
+    fun pagingPlaylistSongs(playlistId: String): PagingSource<Int, CachedSongEntity>
+
+    @Query("SELECT * FROM cached_songs WHERE artistId = :artistId ORDER BY popularity DESC")
+    fun pagingSongsByArtist(artistId: String): PagingSource<Int, CachedSongEntity>
+
+    @Query("DELETE FROM cached_playlist_songs WHERE playlistId = :playlistId")
+    suspend fun clearPlaylistSongs(playlistId: String)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertPlaylistSongs(rows: List<CachedPlaylistSongEntity>)
+}

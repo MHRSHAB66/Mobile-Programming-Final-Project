@@ -4,11 +4,8 @@ import com.example.project.domain.model.Artist
 import com.example.project.domain.model.Song
 
 /**
- * Abstraction over where the catalogue comes from. Implementations return the same [Song]/
- * [Artist] domain models, so the repositories (and the whole app) are independent of the
- * backend.
- * client id is configured) or [MockMusicDataSource] (in-memory catalogue with verified,
- * stable, royalty-free sample audio).
+ * Abstraction over the Melodify catalogue API. Implementations return [Song] / [Artist]
+ * domain models so repositories stay independent of Retrofit DTOs.
  */
 interface RemoteMusicDataSource {
     suspend fun getSongs(): List<Song>

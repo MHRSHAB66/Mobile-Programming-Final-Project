@@ -25,7 +25,7 @@ import org.koin.dsl.module
 
 /** Presentation layer: all ViewModels. */
 val presentationModule = module {
-    viewModel { AuthViewModel(get(), get()) }
+    viewModel { AuthViewModel(get()) }
     viewModel { MainViewModel(get(), get()) }
     viewModel { PlayerViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel { HomeViewModel(get(), get()) }

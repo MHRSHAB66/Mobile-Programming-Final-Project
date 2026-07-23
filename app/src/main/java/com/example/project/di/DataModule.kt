@@ -135,6 +135,7 @@ val dataModule = module {
     single { get<AppDatabase>().downloadDao() }
     single { get<AppDatabase>().searchHistoryDao() }
     single { get<AppDatabase>().chatMessageDao() }
+    single { get<AppDatabase>().catalogCacheDao() }
 
     single<ChatApi> { get<Retrofit>().create(ChatApi::class.java) }
     single<LibraryApi> { get<Retrofit>().create(LibraryApi::class.java) }
@@ -151,8 +152,8 @@ val dataModule = module {
 
     single<PlayerController> { PlayerControllerImpl(androidContext()) }
 
-    single<MusicRepository> { MusicRepositoryImpl(get(), get(), get(), get(), get()) }
+    single<MusicRepository> { MusicRepositoryImpl(get(), get(), get(), get(), get(), get()) }
     single<PlaylistRepository> { PlaylistRepositoryImpl(get(), get()) }
-    single<SearchRepository> { SearchRepositoryImpl(get(), get(), get()) }
+    single<SearchRepository> { SearchRepositoryImpl(get(), get()) }
     single<DownloadRepository> { DownloadRepositoryImpl(androidContext(), get(), get()) }
 }

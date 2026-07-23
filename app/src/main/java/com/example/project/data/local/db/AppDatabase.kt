@@ -10,8 +10,12 @@ import androidx.room.RoomDatabase
         DownloadEntity::class,
         SearchHistoryEntity::class,
         ChatMessageEntity::class,
+        CachedSongEntity::class,
+        CachedArtistEntity::class,
+        CachedPlaylistEntity::class,
+        CachedPlaylistSongEntity::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -20,6 +24,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun downloadDao(): DownloadDao
     abstract fun searchHistoryDao(): SearchHistoryDao
     abstract fun chatMessageDao(): ChatMessageDao
+    abstract fun catalogCacheDao(): CatalogCacheDao
 
     companion object {
         const val NAME = "melodify.db"

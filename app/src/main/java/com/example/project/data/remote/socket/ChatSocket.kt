@@ -24,9 +24,8 @@ sealed interface SocketCommand {
 }
 
 /**
- * Realtime chat transport abstraction. Today this is backed by [FakeChatSocket] (Flow/Channel
- * based), but the contract matches a real OkHttp WebSocket: implement [connect]/[send]/[close]
- * and emit server frames on [incoming], and the rest of the app keeps working unchanged.
+ * Realtime chat transport. Implemented by [MelodifyChatSocket] (OkHttp WebSocket to the
+ * Melodify backend).
  */
 interface ChatSocket {
     val incoming: Flow<SocketEvent>

@@ -3,10 +3,13 @@ package com.example.project.data.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.map
+import com.example.project.data.local.db.CatalogCacheDao
 import com.example.project.data.local.db.DownloadDao
 import com.example.project.data.local.db.LikedSongDao
-import com.example.project.data.mock.MockData
-import com.example.project.data.paging.RemoteSongPagingSource
+import com.example.project.data.local.db.toArtist
+import com.example.project.data.local.db.toCachedEntity
+import com.example.project.data.local.db.toSong
 import com.example.project.data.remote.api.CatalogApi
 import com.example.project.data.remote.api.dto.toDomainSong
 import com.example.project.data.remote.music.RemoteMusicDataSource
@@ -24,78 +27,41 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 /**
- * Catalogue repository. Pulls songs/artists from the injected [RemoteMusicDataSource]
- * and caches successful remote results in memory. If the remote source is empty or fails,
- * falls back to the bundled mock catalogue so the UI still has content — but that mock
- * fallback is **not** treated as a permanent cache, so the next call retries the backend
- * once connectivity returns.
+ * Catalogue repository. Fetches from the Melodify API, writes successes into Room, and
+ * serves that local cache when the network is unavailable.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MusicRepositoryImpl(
     private val dataSource: RemoteMusicDataSource,
     private val catalogApi: CatalogApi,
+    private val catalogCache: CatalogCacheDao,
     private val likedDao: LikedSongDao,
     private val downloadDao: DownloadDao,
     private val settingsRepository: SettingsRepository,
 ) : MusicRepository {
 
-    @Volatile
-    private var cachedSongs: List<Song>? = null
-
-    /** True only when [cachedSongs] came from a successful remote fetch. */
-    @Volatile
-    private var songsFromRemote: Boolean = false
-
-    @Volatile
-    private var cachedArtists: List<Artist>? = null
-
-    @Volatile
-    private var artistsFromRemote: Boolean = false
-
     private suspend fun allSongs(): List<Song> {
-        if (songsFromRemote) {
-            cachedSongs?.let { return it }
-        }
-
         val remote = runCatching { dataSource.getSongs() }.getOrNull()?.takeIf { it.isNotEmpty() }
         if (remote != null) {
-            cachedSongs = remote
-            songsFromRemote = true
+            val now = System.currentTimeMillis()
+            catalogCache.upsertSongs(
+                remote.mapIndexed { index, song ->
+                    song.toCachedEntity(cachedAt = now, popularity = remote.size - index)
+                },
+            )
             return remote
         }
-
-        // Keep a previous remote catalogue if we already had one (transient blip).
-        if (songsFromRemote) {
-            cachedSongs?.let { return it }
-        }
-
-        // Temporary offline fallback — next call will try the backend again.
-        val fallback = cachedSongs ?: MockData.songs
-        cachedSongs = fallback
-        songsFromRemote = false
-        return fallback
+        return catalogCache.getAllSongs().map { it.toSong() }
     }
 
     private suspend fun allArtists(): List<Artist> {
-        if (artistsFromRemote) {
-            cachedArtists?.let { return it }
-        }
-
         val remote = runCatching { dataSource.getArtists() }.getOrNull()?.takeIf { it.isNotEmpty() }
         if (remote != null) {
-            cachedArtists = remote
-            artistsFromRemote = true
+            val now = System.currentTimeMillis()
+            catalogCache.upsertArtists(remote.map { it.toCachedEntity(now) })
             return remote
         }
-
-        if (artistsFromRemote) {
-            cachedArtists?.let { return it }
-        }
-
-        val fallback = cachedArtists ?: MockData.artists
-        cachedArtists = fallback
-        artistsFromRemote = false
-        return fallback
+        return catalogCache.getAllArtists().map { it.toArtist() }
     }
 
     private suspend fun decorate(songs: List<Song>): List<Song> {
@@ -129,7 +95,12 @@ class MusicRepositoryImpl(
     }
 
     override suspend fun getSong(id: String): Song? = withContext(Dispatchers.IO) {
-        allSongs().firstOrNull { it.id == id }?.let { decorate(listOf(it)).first() }
+        val remote = runCatching { catalogApi.getSong(id).toDomainSong() }.getOrNull()
+        if (remote != null) {
+            catalogCache.upsertSongs(listOf(remote.toCachedEntity(System.currentTimeMillis())))
+            return@withContext decorate(listOf(remote)).first()
+        }
+        catalogCache.getSong(id)?.toSong()?.let { decorate(listOf(it)).first() }
     }
 
     override suspend fun getSongsByIds(ids: List<String>): List<Song> = withContext(Dispatchers.IO) {
@@ -144,36 +115,34 @@ class MusicRepositoryImpl(
     override suspend fun getArtist(id: String): Artist? = withContext(Dispatchers.IO) {
         val fresh = runCatching { dataSource.getArtist(id) }.getOrNull()
         if (fresh != null) {
-            cachedArtists = when {
-                cachedArtists == null -> listOf(fresh)
-                cachedArtists!!.any { it.id == id } ->
-                    cachedArtists!!.map { if (it.id == id) fresh else it }
-                else -> cachedArtists!! + fresh
-            }
-            artistsFromRemote = true
+            catalogCache.upsertArtists(listOf(fresh.toCachedEntity(System.currentTimeMillis())))
             return@withContext fresh
         }
-        allArtists().firstOrNull { it.id == id }
+        catalogCache.getArtist(id)?.toArtist()
+            ?: allArtists().firstOrNull { it.id == id }
     }
 
     override suspend fun getArtistSongs(artistId: String): List<Song> = withContext(Dispatchers.IO) {
         val remote = runCatching {
             catalogApi.getArtistSongs(artistId, page = 1, limit = 200).items.map { it.toDomainSong() }
-        }.getOrNull()
-        if (!remote.isNullOrEmpty()) return@withContext decorate(remote)
-        decorate(allSongs().filter { it.artistId == artistId })
+        }.getOrNull()?.takeIf { it.isNotEmpty() }
+        if (remote != null) {
+            val now = System.currentTimeMillis()
+            catalogCache.upsertSongs(
+                remote.mapIndexed { index, song ->
+                    song.toCachedEntity(cachedAt = now, popularity = remote.size - index)
+                },
+            )
+            return@withContext decorate(remote)
+        }
+        decorate(catalogCache.getSongsByArtist(artistId).map { it.toSong() })
     }
 
     override fun getArtistSongsPaged(artistId: String): Flow<PagingData<Song>> =
         Pager(
-            config = PagingConfig(pageSize = 20, enablePlaceholders = false, initialLoadSize = 20),
-            pagingSourceFactory = {
-                RemoteSongPagingSource { page, limit ->
-                    catalogApi.getArtistSongs(artistId, page = page, limit = limit)
-                }
-            },
-        ).flow
-
+            config = PagingConfig(pageSize = 30, enablePlaceholders = false),
+            pagingSourceFactory = { catalogCache.pagingSongsByArtist(artistId) },
+        ).flow.map { paging -> paging.map { it.toSong() } }
     override fun observeLibrarySignals(): Flow<Unit> =
         settingsRepository.settings.flatMapLatest { settings ->
             combine(likedDao.observeIds(), downloadDao.observeCompletedIds(settings.currentUserId)) { _, _ -> Unit }
