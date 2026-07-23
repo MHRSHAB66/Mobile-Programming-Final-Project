@@ -37,7 +37,7 @@ fun CoverImage(
     url: String?,
     contentDescription: String?,
     modifier: Modifier = Modifier,
-    cornerRadius: Int = 12,
+    cornerRadius: Int = 16,
 ) {
     ThemedAsyncImage(
         url = url,
