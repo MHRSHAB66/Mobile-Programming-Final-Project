@@ -170,6 +170,9 @@ interface CatalogCacheDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertArtists(artists: List<CachedArtistEntity>)
 
+    @Query("UPDATE cached_artists SET followers = :followers WHERE id = :id")
+    suspend fun updateArtistFollowers(id: String, followers: Int)
+
     @Query("DELETE FROM cached_artists")
     suspend fun clearArtists()
 

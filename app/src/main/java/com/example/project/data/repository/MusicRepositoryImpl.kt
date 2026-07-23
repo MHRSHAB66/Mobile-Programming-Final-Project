@@ -143,6 +143,12 @@ class MusicRepositoryImpl(
             config = PagingConfig(pageSize = 30, enablePlaceholders = false),
             pagingSourceFactory = { catalogCache.pagingSongsByArtist(artistId) },
         ).flow.map { paging -> paging.map { it.toSong() } }
+
+    override suspend fun updateCachedArtistFollowers(artistId: String, followers: Int) =
+        withContext(Dispatchers.IO) {
+            catalogCache.updateArtistFollowers(artistId, followers.coerceAtLeast(0))
+        }
+
     override fun observeLibrarySignals(): Flow<Unit> =
         settingsRepository.settings.flatMapLatest { settings ->
             combine(likedDao.observeIds(), downloadDao.observeCompletedIds(settings.currentUserId)) { _, _ -> Unit }

@@ -68,14 +68,19 @@ class ArtistViewModel(
     fun toggleFollow() {
         viewModelScope.launch {
             val wasFollowed = uiState.value.isFollowed
-            artist.value = artist.value?.let { current ->
+            val updated = artist.value?.let { current ->
                 current.copy(
                     followers = (current.followers + if (wasFollowed) -1 else 1).coerceAtLeast(0),
                 )
             }
+            if (updated != null) {
+                artist.value = updated
+                musicRepository.updateCachedArtistFollowers(artistId, updated.followers)
+            }
             socialRepository.toggleFollowArtist(artistId)
             musicRepository.getArtist(artistId)?.let { refreshed ->
                 artist.value = refreshed
+                musicRepository.updateCachedArtistFollowers(artistId, refreshed.followers)
             }
         }
     }

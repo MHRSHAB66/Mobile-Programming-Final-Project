@@ -41,12 +41,13 @@ class HomeViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     init {
-        load()
+        load(showLoading = true)
     }
 
-    fun load() {
+    /** Full load (shimmer if nothing shown yet). */
+    fun load(showLoading: Boolean = true) {
         viewModelScope.launch {
-            loading.value = true
+            if (showLoading && baseFeed.value == null) loading.value = true
             error.value = null
             runCatching { getHomeFeed() }
                 .onSuccess { baseFeed.value = it }
@@ -54,6 +55,9 @@ class HomeViewModel(
             loading.value = false
         }
     }
+
+    /** Silent refresh when returning to Home (e.g. after following an artist). */
+    fun refresh() = load(showLoading = false)
 
     private fun HomeFeed.decorate(liked: Set<String>): HomeFeed = copy(
         carousel = carousel.applyLiked(liked),
