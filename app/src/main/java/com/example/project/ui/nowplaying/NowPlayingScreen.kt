@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Message
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.DownloadDone
@@ -291,6 +292,16 @@ fun NowPlayingScreen(
                             )
                         }
                     }
+                }
+                IconButton(
+                    onClick = { song?.let(playerViewModel::openAddToPlaylist) },
+                    enabled = song != null,
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
+                        contentDescription = stringResource(R.string.cd_add_to_playlist),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
                 if (isOffline) {
                     IconButton(onClick = {}, enabled = false) {

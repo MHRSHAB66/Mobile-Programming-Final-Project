@@ -53,6 +53,7 @@ fun DownloadsScreen(
     topBar: TopBarActions,
     currentSongId: String?,
     onPlaySong: (List<Song>, Int) -> Unit,
+    onAddToPlaylist: (Song) -> Unit,
     contentPadding: PaddingValues,
     modifier: Modifier = Modifier,
     viewModel: DownloadsViewModel = koinViewModel(),
@@ -95,6 +96,7 @@ fun DownloadsScreen(
                         item = item,
                         isCurrent = item.song.id == currentSongId,
                         onClick = { onPlaySong(songs, index) },
+                        onAddToPlaylist = { onAddToPlaylist(item.song) },
                         onDelete = { viewModel.remove(item.song.id) },
                     )
                 }
@@ -108,6 +110,7 @@ private fun SwipeableDownloadRow(
     item: DownloadItem,
     isCurrent: Boolean,
     onClick: () -> Unit,
+    onAddToPlaylist: () -> Unit,
     onDelete: () -> Unit,
 ) {
     var dismissed by remember { mutableStateOf(false) }
@@ -146,6 +149,7 @@ private fun SwipeableDownloadRow(
             song = item.song,
             isCurrent = isCurrent,
             onClick = onClick,
+            onAddToPlaylist = { onAddToPlaylist() },
             modifier = Modifier.background(MaterialTheme.colorScheme.background),
             trailing = {
                 Row(verticalAlignment = Alignment.CenterVertically) {

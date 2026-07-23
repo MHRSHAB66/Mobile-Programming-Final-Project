@@ -43,6 +43,7 @@ fun ArtistScreen(
     onBack: () -> Unit,
     onPlaySong: (List<Song>, Int) -> Unit,
     onToggleLike: (Song) -> Unit,
+    onAddToPlaylist: (Song) -> Unit,
     viewModel: ArtistViewModel = koinViewModel(parameters = { parametersOf(artistId) }),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -112,6 +113,7 @@ fun ArtistScreen(
                     isCurrent = song.id == currentSongId,
                     onClick = { onPlaySong(state.songs, index) },
                     onToggleLike = onToggleLike,
+                    onAddToPlaylist = onAddToPlaylist,
                 )
             }
         }

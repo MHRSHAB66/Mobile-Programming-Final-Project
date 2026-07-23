@@ -57,6 +57,7 @@ fun SearchScreen(
     currentSongId: String?,
     onPlaySong: (List<Song>, Int) -> Unit,
     onToggleLike: (Song) -> Unit,
+    onAddToPlaylist: (Song) -> Unit,
     onOpenArtist: (String) -> Unit,
     onOpenPlaylist: (String) -> Unit,
     onOpenUser: (String) -> Unit,
@@ -260,6 +261,7 @@ private fun ResultsList(
                             onSubmit()
                         },
                         onToggleLike = onToggleLike,
+                        onAddToPlaylist = onAddToPlaylist,
                     )
                 }
                 is SearchHit.ArtistHit -> {

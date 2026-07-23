@@ -50,6 +50,7 @@ fun AppNavHost(
     val onPlayAll: (List<Song>) -> Unit = { playerViewModel.playQueue(it, 0) }
     val onShuffle: (List<Song>) -> Unit = { playerViewModel.playShuffled(it) }
     val onToggleLike: (Song) -> Unit = playerViewModel::onToggleLike
+    val onAddToPlaylist: (Song) -> Unit = playerViewModel::openAddToPlaylist
 
     fun navigateTab(route: String) {
         navController.navigate(route) {
@@ -110,6 +111,7 @@ fun AppNavHost(
                 currentSongId = currentSongId,
                 onPlaySong = onPlaySong,
                 onToggleLike = onToggleLike,
+                onAddToPlaylist = onAddToPlaylist,
                 onOpenArtist = openArtist,
                 onOpenPlaylist = openPlaylist,
                 onOpenUser = openUser,
@@ -121,6 +123,7 @@ fun AppNavHost(
                 topBar = topBar(),
                 currentSongId = currentSongId,
                 onPlaySong = onPlaySong,
+                onAddToPlaylist = onAddToPlaylist,
                 contentPadding = contentPadding,
             )
         }
@@ -128,6 +131,7 @@ fun AppNavHost(
             PlaylistsScreen(
                 topBar = topBar(),
                 onOpenPlaylist = openPlaylist,
+                onShowMessage = onShowMessage,
                 contentPadding = contentPadding,
             )
         }
@@ -171,6 +175,7 @@ fun AppNavHost(
                 onPlayAll = onPlayAll,
                 onShuffle = onShuffle,
                 onRemove = onToggleLike,
+                onAddToPlaylist = onAddToPlaylist,
             )
         }
         composable(Routes.RECENT) {
@@ -180,6 +185,7 @@ fun AppNavHost(
                 onPlaySong = onPlaySong,
                 onPlayAll = onPlayAll,
                 onToggleLike = onToggleLike,
+                onAddToPlaylist = onAddToPlaylist,
             )
         }
         composable(Routes.FOLLOWED) {
@@ -208,6 +214,7 @@ fun AppNavHost(
                 onPlayAll = onPlayAll,
                 onShuffle = onShuffle,
                 onToggleLike = onToggleLike,
+                onAddToPlaylist = onAddToPlaylist,
             )
         }
         composable(
@@ -221,6 +228,7 @@ fun AppNavHost(
                 onBack = back,
                 onPlaySong = onPlaySong,
                 onToggleLike = onToggleLike,
+                onAddToPlaylist = onAddToPlaylist,
             )
         }
         composable(

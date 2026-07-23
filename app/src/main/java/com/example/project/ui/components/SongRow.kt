@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Equalizer
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +33,7 @@ fun SongRow(
     modifier: Modifier = Modifier,
     isCurrent: Boolean = false,
     onToggleLike: ((Song) -> Unit)? = null,
+    onAddToPlaylist: ((Song) -> Unit)? = null,
     trailing: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val dimens = LocalDimens.current
@@ -75,6 +78,15 @@ fun SongRow(
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(dimens.iconMedium),
             )
+        }
+        if (onAddToPlaylist != null) {
+            IconButton(onClick = { onAddToPlaylist(song) }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.PlaylistAdd,
+                    contentDescription = stringResource(R.string.cd_add_to_playlist),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
         if (onToggleLike != null) {
             LikeButton(

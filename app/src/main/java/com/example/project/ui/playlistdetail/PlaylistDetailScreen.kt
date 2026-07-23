@@ -45,6 +45,7 @@ fun PlaylistDetailScreen(
     onPlayAll: (List<Song>) -> Unit,
     onShuffle: (List<Song>) -> Unit,
     onToggleLike: (Song) -> Unit,
+    onAddToPlaylist: (Song) -> Unit,
     viewModel: PlaylistDetailViewModel = koinViewModel(parameters = { parametersOf(playlistId) }),
 ) {
     val header by viewModel.header.collectAsStateWithLifecycle()
@@ -126,6 +127,7 @@ fun PlaylistDetailScreen(
                     isCurrent = song.id == currentSongId,
                     onClick = { onPlaySong(songs, index) },
                     onToggleLike = onToggleLike,
+                    onAddToPlaylist = onAddToPlaylist,
                 )
             }
         }

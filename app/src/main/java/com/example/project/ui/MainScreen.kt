@@ -21,6 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.project.R
+import com.example.project.ui.components.AddToPlaylistSheet
 import com.example.project.ui.components.MiniPlayer
 import com.example.project.ui.navigation.AppNavHost
 import com.example.project.ui.navigation.BottomBar
@@ -47,6 +48,8 @@ fun MainScreen() {
 
     val avatarUrl by mainViewModel.avatarUrl.collectAsStateWithLifecycle()
     val playback by playerViewModel.playbackState.collectAsStateWithLifecycle()
+    val addToPlaylistSong by playerViewModel.addToPlaylistSong.collectAsStateWithLifecycle()
+    val myPlaylists by playerViewModel.myPlaylists.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -137,6 +140,17 @@ fun MainScreen() {
                     playback = playback,
                     contentPadding = innerPadding,
                     onShowMessage = { message -> scope.launch { snackbarHostState.showSnackbar(message) } },
+                )
+            }
+
+            addToPlaylistSong?.let { song ->
+                AddToPlaylistSheet(
+                    song = song,
+                    playlists = myPlaylists,
+                    onDismiss = playerViewModel::dismissAddToPlaylist,
+                    onPickPlaylist = { playlist ->
+                        playerViewModel.addSongToPlaylist(playlist.id)
+                    },
                 )
             }
         }

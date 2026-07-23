@@ -26,6 +26,7 @@ fun RecentlyPlayedScreen(
     onPlaySong: (List<Song>, Int) -> Unit,
     onPlayAll: (List<Song>) -> Unit,
     onToggleLike: (Song) -> Unit,
+    onAddToPlaylist: (Song) -> Unit,
     viewModel: RecentlyPlayedViewModel = koinViewModel(),
 ) {
     val songs by viewModel.songs.collectAsStateWithLifecycle()
@@ -57,6 +58,7 @@ fun RecentlyPlayedScreen(
                     isCurrent = song.id == currentSongId,
                     onClick = { onPlaySong(songs, index) },
                     onToggleLike = onToggleLike,
+                    onAddToPlaylist = onAddToPlaylist,
                 )
             }
         }

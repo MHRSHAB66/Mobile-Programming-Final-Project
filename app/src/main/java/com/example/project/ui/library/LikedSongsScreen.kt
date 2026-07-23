@@ -42,6 +42,7 @@ fun LikedSongsScreen(
     onPlayAll: (List<Song>) -> Unit,
     onShuffle: (List<Song>) -> Unit,
     onRemove: (Song) -> Unit,
+    onAddToPlaylist: (Song) -> Unit,
     viewModel: LikedSongsViewModel = koinViewModel(),
 ) {
     val songs by viewModel.songs.collectAsStateWithLifecycle()
@@ -79,6 +80,7 @@ fun LikedSongsScreen(
                             song = song,
                             isCurrent = song.id == currentSongId,
                             onClick = { onPlaySong(songs, index) },
+                            onAddToPlaylist = onAddToPlaylist,
                             modifier = Modifier.background(MaterialTheme.colorScheme.background),
                         )
                     }

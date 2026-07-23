@@ -7,9 +7,15 @@ import com.example.project.data.remote.api.dto.HomeFeedDto
 import com.example.project.data.remote.api.dto.SearchResponseDto
 import com.example.project.data.remote.api.dto.SongDto
 import com.example.project.data.remote.api.dto.SongPageDto
+import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
+import com.example.project.data.remote.api.dto.AddPlaylistSongRequestDto
+import com.example.project.data.remote.api.dto.CreatePlaylistRequestDto
+import com.example.project.data.remote.api.dto.MessageResponseDto
 
 interface CatalogApi {
     @GET("home")
@@ -62,4 +68,22 @@ interface CatalogApi {
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 30,
     ): SearchResponseDto
+
+    @GET("me/playlists")
+    suspend fun getMyPlaylists(): List<CatalogPlaylistDto>
+
+    @POST("me/playlists")
+    suspend fun createPlaylist(@Body body: CreatePlaylistRequestDto): CatalogPlaylistDto
+
+    @POST("me/playlists/{playlistId}/songs")
+    suspend fun addSongToPlaylist(
+        @Path("playlistId") playlistId: String,
+        @Body body: AddPlaylistSongRequestDto,
+    ): MessageResponseDto
+
+    @DELETE("me/playlists/{playlistId}/songs/{songId}")
+    suspend fun removeSongFromPlaylist(
+        @Path("playlistId") playlistId: String,
+        @Path("songId") songId: String,
+    ): MessageResponseDto
 }

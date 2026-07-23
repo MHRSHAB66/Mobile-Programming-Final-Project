@@ -84,6 +84,19 @@
     <string name="playlists_global">موسیقی جهانی</string>
     <string name="playlists_local">موسیقی داخلی</string>
     <string name="playlists_user">پلی‌لیست‌های شما</string>
+    <string name="playlists_create">پلی‌لیست جدید</string>
+    <string name="playlists_create_hint">نام پلی‌لیست</string>
+    <string name="playlists_create_action">ایجاد</string>
+    <string name="playlists_create_success">پلی‌لیست ساخته شد</string>
+    <string name="playlists_create_error">ساخت پلی‌لیست ممکن نشد</string>
+    <string name="playlists_public_label">پلی‌لیست عمومی</string>
+    <string name="playlist_public">عمومی</string>
+    <string name="playlist_private">خصوصی</string>
+    <string name="add_to_playlist_title">افزودن به پلی‌لیست</string>
+    <string name="add_to_playlist_empty">ابتدا از تب پلی‌لیست‌ها یک پلی‌لیست بسازید</string>
+    <string name="add_to_playlist_success">به پلی‌لیست اضافه شد</string>
+    <string name="add_to_playlist_error">افزودن به پلی‌لیست ممکن نشد</string>
+    <string name="cd_add_to_playlist">افزودن به پلی‌لیست</string>
 
     <!-- Profile -->
     <string name="profile_title">پروفایل</string>

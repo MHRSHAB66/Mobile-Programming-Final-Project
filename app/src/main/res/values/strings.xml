@@ -86,6 +86,19 @@
     <string name="playlists_global">Global Music</string>
     <string name="playlists_local">Local Music</string>
     <string name="playlists_user">Your Playlists</string>
+    <string name="playlists_create">New playlist</string>
+    <string name="playlists_create_hint">Playlist name</string>
+    <string name="playlists_create_action">Create</string>
+    <string name="playlists_create_success">Playlist created</string>
+    <string name="playlists_create_error">Could not create playlist</string>
+    <string name="playlists_public_label">Public playlist</string>
+    <string name="playlist_public">Public</string>
+    <string name="playlist_private">Private</string>
+    <string name="add_to_playlist_title">Add to playlist</string>
+    <string name="add_to_playlist_empty">Create a playlist first from the Playlists tab</string>
+    <string name="add_to_playlist_success">Added to playlist</string>
+    <string name="add_to_playlist_error">Could not add to playlist</string>
+    <string name="cd_add_to_playlist">Add to playlist</string>
 
     <!-- Profile -->
     <string name="profile_title">Profile</string>

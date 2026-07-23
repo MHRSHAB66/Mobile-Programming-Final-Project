@@ -72,3 +72,12 @@ data class SearchResponseDto(
     val playlists: List<CatalogPlaylistDto> = emptyList(),
     val users: List<UserDto> = emptyList(),
 )
+
+data class CreatePlaylistRequestDto(
+    val title: String,
+    @Json(name = "is_public") val isPublic: Boolean = true,
+)
+
+data class AddPlaylistSongRequestDto(
+    @Json(name = "song_id") val songId: String,
+)
